@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+Metadata: 
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: XebiaLabs DevOps Platform Configuration
+      Parameters:
+      - XLPlatformInstanceType
+      - InstallXLRelease
+      - XLReleaseVersion
+      - XLReleasePassword
+      - InstallXLDeploy
+      - XLDeployVersion
+      - XLDeployPassword
+    - Label:
+        default: VPC Network Configuration
+      Parameters:
+        - PrivateSubnet1ID
+        - PrivateSubnet2ID
+        - DataSubnet1ID
+        - DataSubnet2ID
+    - Label:
+        default: RDS Configuration
+      Parameters:
+        - DBMasterUsername
+        - DBMasterPassword
+        - AuroraRDSSecurityGroup
+        - DBBackupRetentionPeriod
+        - DBInstanceClass
+    - Label:
+        default: General Settings
+      Parameters:
+      - KeyPairName
+    - Label:
+        default: AWS Quick Start Configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix  
+    ParameterLabels:
+      XLPlatformInstanceType:
+        default: XL DevOps Platform Instance Type
+      XLDeployPassword:
+        default: XL Deploy administrator password
+      XLReleasePassword:
+        default: XL Release administrator password
+      XLDeployVersion:
+        default: XL Deploy version
+      XLReleaseVersion:
+        default: XL Release version
+      InstallXLRelease:
+        default: Install XL Release
+      InstallXLDeploy:
+        default: Install XL Deploy
+      VPCCIDR:
+        default: VPC CIDR
+      AvailabilityZones:
+        default: Availability Zones
+      PrivateSubnet1ID:
+        default: Private Subnet 1
+      PrivateSubnet2ID:
+        default: Private Subnet 2
+      DataSubnet1ID:
+        default: Private Data Subnet 1
+      DataSubnet2ID:
+        default: Private Data Subnet 2
+      KeyPairName:
+        default: Key name
+      DBMasterUsername:
+        default: Database administrator username
+      DBMasterPassword:
+        default: Database administrator password
+      AuroraRDSSecurityGroup:
+        default: Amazon Aurora Security Group
+      QSS3BucketName:
+        default: Quick Start S3 Bucket Name
+      QSS3KeyPrefix:
+        default: Quick Start S3 Key Prefix
+Parameters: 
+  XLPlatformInstanceType:
+    AllowedValues:
+    - r5.large
+    - r5.xlarge
+    - r4.large
+    - r4.xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - t3.medium
+    - t3.large
+    - t3.xlarge
+    Description: The instance type the XL DevOps Platform applications are created on
+    Type: String
+    Default: c5.large
+  XLDeployPassword:
+    Description: The administrator password for XL Deploy
+    MinLength: 8
+    Type: String
+    NoEcho: True
+  XLReleasePassword:
+    Description: The administrator password for XL Deploy
+    MinLength: 8
+    Type: String
+    NoEcho: True
+  XLReleaseVersion:
+    Description: The version of XL Release to deploy
+    AllowedPattern: '^[0-9]+(\\.[0-9+]){1,2}([-+.].*)?'
+    Type: String
+  XLDeployVersion:
+    Description: The version of XL Deploy to deploy
+    AllowedPattern: '^[0-9]+(\\.[0-9+]){1,2}([-+.].*)?'
+    Type: String
+  InstallXLRelease:
+    Description: Whether XL Release should be installed in the ECS Cluster.
+    Type: String
+    Default: True
+    AllowedValues: [True, False]
+  InstallXLDeploy:
+    Description: Whether XL Deploy should be installed in the ECS Cluster.
+    Type: String
+    Default: True
+    AllowedValues: [True, False]
+  PrivateSubnet1ID:
+    Description: The first subnet the XL DevOps Platform should be deployed to
+    Type: AWS::EC2::Subnet::Id
+
+  PrivateSubnet2ID:
+    Description: The second subnet the XL DevOps Platform should be deployed to
+    Type: AWS::EC2::Subnet::Id
+
+  DataSubnet1ID:
+    Description: The first subnet the Aurora database cluster should be deployed to
+    Type: AWS::EC2::Subnet::Id
+
+  DataSubnet2ID:
+    Description: The second subnet the Aurora database cluster should be deployed to
+    Type: AWS::EC2::Subnet::Id
+
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
+    Default: quickstart-xl-devops-platform/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
+    Type: String
+
+# Mappings: 
+
+Conditions: 
+  GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
+  ShouldInstallXLDeploy: !Equals [ !Ref InstallXLDeploy, True ]
+  ShouldInstallXLRelease: !Equals [ !Ref InstallXLRelease, True ]
+Resources:
+  ECSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/includes/ecs.template
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        EnvironmentName: XLDevOps
+        InstanceType: !Ref XLPlatformInstanceType
+  RDSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/includes/rds.template
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        PrivateSubnet1ID: !Ref DataSubnet1ID
+        PrivateSubnet2ID: !Ref DataSubnet2ID
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterPassword: !Ref DBMasterPassword
+        DBInstanceClass: !Ref DBInstanceClass
+        AuroraRDSSecurityGroup: !Ref AuroraRDSSecurityGroup
+        DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+  XLReleaseApplication:
+    Type: AWS::CloudFormation::Stack
+    Condition: ShouldInstallXLRelease
+    Properties:
+      TemplateURL: !Sub 
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/includes/xl-release.template
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        XLReleasePassword: !Ref XLReleasePassword
+        ECSCluster: !GetAtt ECSStack.Outputs.Cluster
+        ECSRole: !GetAtt ECSStack.Outputs.ECSRole
+        XLReleaseVersion: !Ref XLReleaseVersion
+# Outputs:

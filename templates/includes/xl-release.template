@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# Metadata: 
+
+Parameters: 
+  ECSCluster:
+    Description: The provisioned ECS Cluster ID
+    Type: String
+  ECSRole:
+    Description: 
+  LaunchType:
+    Description: The desired launch type, can be only be 'ECS EC2' at this moment
+    AllowedValues:
+    - ECS EC2
+    Type: String
+  XLReleaseVersion:
+    Description: The version of XL Release to deploy
+    AllowedPattern: '^[0-9]+(\\.[0-9+]){1,2}([-+.].*)?'
+    Type: String
+
+# Mappings: 
+
+Conditions:
+  ShouldLaunchECS: !Equals [ !Ref LaunchType, 'ECS EC2' ]
+
+Resources: 
+  XLReleaseECSService:
+    Type: AWS::ECS::Service
+    Condition: ShouldLaunchECS
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: '2'
+      LaunchType: !If [ !Equals [ !Ref LaunchType, 'ECS EC2' ], EC2, FARGATE ]
+      PlacementConstratints:
+        - Type: distinctInstance
+      PlacementStrategies:
+        - Type: spread
+          Field: 'attribute:ecs.availability-zone'
+      ServiceName: XLReleaseECSService
+      # LoadBalancers:
+      # - ContainerName: simple-app
+      #   ContainerPort: '80'
+      #   TargetGroupArn: !Ref 'ECSTG'
+      Role: !Ref ECSRole
+      TaskDefinition: !Ref XLReleaseTaskDefinition
+  XLReleaseTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Condition: ShouldLaunchECS
+    Properties:
+      ContainerDefinitions:
+        - Name: XLRelease
+          Image: !Join [ ':', [ xebialabs/xl-release, !Ref XLReleaseVersion ] ]
+# Outputs:
