@@ -16,6 +16,8 @@ Metadata:
     - Label:
         default: VPC Network Configuration
       Parameters:
+        - VPCID
+        - VPCCIDR
         - PrivateSubnet1ID
         - PrivateSubnet2ID
         - DataSubnet1ID
@@ -25,7 +27,7 @@ Metadata:
       Parameters:
         - DBMasterUsername
         - DBMasterPassword
-        - AuroraRDSSecurityGroup
+        # - AuroraRDSSecurityGroup
         - DBBackupRetentionPeriod
         - DBInstanceClass
     - Label:
@@ -70,8 +72,8 @@ Metadata:
         default: Database administrator username
       DBMasterPassword:
         default: Database administrator password
-      AuroraRDSSecurityGroup:
-        default: Amazon Aurora Security Group
+      # AuroraRDSSecurityGroup:
+      #   default: Amazon Aurora Security Group
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
@@ -107,11 +109,11 @@ Parameters:
     NoEcho: True
   XLReleaseVersion:
     Description: The version of XL Release to deploy
-    AllowedPattern: '^[0-9]+(\\.[0-9+]){1,2}([-+.].*)?'
+    AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
     Type: String
   XLDeployVersion:
     Description: The version of XL Deploy to deploy
-    AllowedPattern: '^[0-9]+(\\.[0-9+]){1,2}([-+.].*)?'
+    AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
     Type: String
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
@@ -123,6 +125,16 @@ Parameters:
     Type: String
     Default: True
     AllowedValues: [True, False]
+
+  VPCID:
+    Description: The VPC Id
+    Type: AWS::EC2::VPC::Id
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR block for the VPC
+    Type: String
   PrivateSubnet1ID:
     Description: The first subnet the XL DevOps Platform should be deployed to
     Type: AWS::EC2::Subnet::Id
@@ -151,7 +163,39 @@ Parameters:
     Default: quickstart-xl-devops-platform/
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
     Type: String
-
+  DBMasterUsername:
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+    Default: xldevops
+    Description: The database admin account username
+    MaxLength: '16'
+    MinLength: '1'
+    NoEcho: 'true'
+    Type: String
+  DBMasterPassword:
+    AllowedPattern: "(?=\\S)[^@/\"\\r\\n\\t\\f\\s]*"
+    ConstraintDescription: 'Min 8 alphanumeric. Cannot contain white space, @, /, "'
+    Description: The database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    NoEcho: 'True'
+    Type: String
+  DBBackupRetentionPeriod:
+    Default: '7'
+    Description: The number of days for which automatic DB snapshots are retained.
+    Type: String
+  DBInstanceClass:
+    AllowedValues:
+    - db.r4.16xlarge
+    - db.r4.8xlarge
+    - db.r4.4xlarge
+    - db.r4.2xlarge
+    - db.r4.xlarge
+    - db.r4.large
+    ConstraintDescription: Must select a valid database instance type.
+    Default: db.r4.large
+    Description: The name of the compute and memory capacity class of the DB instance.
+    Type: String
 # Mappings: 
 
 Conditions: 
@@ -166,6 +210,7 @@ Resources:
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/includes/ecs.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
+        VPCID: !Ref VPCID
         PrivateSubnet1ID: !Ref PrivateSubnet1ID
         PrivateSubnet2ID: !Ref PrivateSubnet2ID
         EnvironmentName: XLDevOps
@@ -182,7 +227,7 @@ Resources:
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterPassword: !Ref DBMasterPassword
         DBInstanceClass: !Ref DBInstanceClass
-        AuroraRDSSecurityGroup: !Ref AuroraRDSSecurityGroup
+        # AuroraRDSSecurityGroup: !Ref AuroraRDSSecurityGroup
         DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
   XLReleaseApplication:
     Type: AWS::CloudFormation::Stack
@@ -192,8 +237,26 @@ Resources:
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/includes/xl-release.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
+        VPCID: !Ref VPCID
+        VPCCIDR: !Ref VPCCIDR
         XLReleasePassword: !Ref XLReleasePassword
         ECSCluster: !GetAtt ECSStack.Outputs.Cluster
+        ECSSecurityGroup: !GetAtt ECSStack.Outputs.ECSSecurityGroup
         ECSRole: !GetAtt ECSStack.Outputs.ECSRole
         XLReleaseVersion: !Ref XLReleaseVersion
+  XLDeployApplication:
+    Type: AWS::CloudFormation::Stack
+    Condition: ShouldInstallXLDeploy
+    Properties:
+      TemplateURL: !Sub 
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/includes/xl-deploy.template
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        VPCID: !Ref VPCID
+        VPCCIDR: !Ref VPCCIDR
+        XLDeployPassword: !Ref XLDeployPassword
+        ECSCluster: !GetAtt ECSStack.Outputs.Cluster
+        ECSSecurityGroup: !GetAtt ECSStack.Outputs.ECSSecurityGroup
+        ECSRole: !GetAtt ECSStack.Outputs.ECSRole
+        XLDeployVersion: !Ref XLDeployVersion
 # Outputs:

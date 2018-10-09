@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: ---
 # Metadata: 
 
-Parameters: 
+Parameters:
   VPCID:
     Description: The VPC Id
     Type: AWS::EC2::VPC::Id
@@ -16,7 +16,7 @@ Parameters:
     Description: The provisioned ECS Cluster ID
     Type: String
   ECSRole:
-    Description: The IAM Role to link to the ECS instance.
+    Description: The ECS role
     Type: String
   ECSSecurityGroup:
     Description: The ECS Security Group to attach ingress rules to
@@ -27,12 +27,12 @@ Parameters:
     - ECS EC2
     Type: String
     Default: ECS EC2
-  XLReleaseVersion:
-    Description: The version of XL Release to deploy
+  XLDeployVersion:
+    Description: The version of XL Deploy to deploy
     AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
     Type: String
-  XLReleasePassword:
-    Description: The admin password of XL Release
+  XLDeployPassword:
+    Description: The admin password of XL Deploy
     MinLength: 8
     Type: String
     NoEcho: True
@@ -45,16 +45,16 @@ Conditions:
   ShouldLaunchECSCluster: !Or [ Condition: ShouldLaunchECSEC2, Condition: ShouldLaunchECSFargate]
 
 Resources:
-  XLReleaseSGIngress:
+  XLDeploySGIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
       CidrIp: 0.0.0.0/0
-      Description: Allow access to port 5516 on the XL Release container(s)
-      FromPort: 5516
-      ToPort: 5516
+      Description: Allow access to port 5516 on the XL Deploy container(s)
+      FromPort: 4516
+      ToPort: 4516
       GroupId: !Ref ECSSecurityGroup
       IpProtocol: tcp
-  XLReleaseECSService:
+  XLDeployECSService:
     Type: AWS::ECS::Service
     Condition: ShouldLaunchECSCluster
     Properties:
@@ -62,28 +62,31 @@ Resources:
       DesiredCount: '2'
       LaunchType: !If [ ShouldLaunchECSEC2, EC2, FARGATE ]
       PlacementConstraints:
-        - Type: distinctInstance
+      - Type: distinctInstance
       PlacementStrategies:
-        - Type: spread
-          Field: 'attribute:ecs.availability-zone'
-      ServiceName: XLReleaseECSService
+      - Type: spread
+        Field: 'attribute:ecs.availability-zone'
+      ServiceName: XLDeployECSService
       # LoadBalancers:
       # - ContainerName: simple-app
       #   ContainerPort: '80'
       #   TargetGroupArn: !Ref 'ECSTG'
       # Role: !Ref ECSRole
-      TaskDefinition: !Ref XLReleaseTaskDefinition
-  XLReleaseTaskDefinition:
+      TaskDefinition: !Ref XLDeployTaskDefinition
+  XLDeployTaskDefinition:
     Type: AWS::ECS::TaskDefinition
-    Condition: ShouldLaunchECSCluster
+    Condition: ShouldLaunchECSCluster 
     Properties:
       ContainerDefinitions:
-        - Name: XLRelease
-          Image: !Join [ ':', [ xebialabs/xl-release, !Ref XLReleaseVersion ] ]
+        - Name: XLDeploy
+          Image: !Join [ ':', [ xebialabs/xl-deploy, !Ref XLDeployVersion ] ]
           Memory: 8096
           Cpu: 4
           PortMappings:
-          - ContainerPort: 5516
-            HostPort: 5516
+          - ContainerPort: 4516
+            Protocol: tcp
+          Environment:
+          - Name: ADMIN_PASSWORD
+            Value: !Ref XLDeployPassword
           Hostname: xl-deploy
 # Outputs:

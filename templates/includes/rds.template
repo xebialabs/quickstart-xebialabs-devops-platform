@@ -8,9 +8,9 @@ Parameters:
   PrivateSubnet2ID:
     Description: The second subnet the Aurora cluster should be deployed to
     Type: AWS::EC2::Subnet::Id
-  AuroraRDSSecurityGroup:
-    Description: Aurora Security Group
-    Type: 'AWS::EC2::SecurityGroup::Id'
+  # AuroraRDSSecurityGroup:
+  #   Description: Aurora Security Group
+  #   Type: 'AWS::EC2::SecurityGroup::Id'
   DBAutoMinorVersionUpgrade:
     AllowedValues:
       - 'true'
@@ -24,30 +24,14 @@ Parameters:
     Type: String
   DBInstanceClass:
     AllowedValues:
-      - db.t1.micro
-      - db.m1.small
-      - db.m3.medium
-      - db.m3.large
-      - db.m3.xlarge
-      - db.m3.2xlarge
-      - db.m4.2xlarge
-      - db.r3.large
-      - db.r3.xlarge
-      - db.r3.2xlarge
-      - db.r3.4xlarge
-      - db.r3.8xlarge
-      - db.t2.micro
-      - db.t2.small
-      - db.t2.medium
-      - db.m2.xlarge
-      - db.m2.2xlarge
-      - db.m2.4xlarge
-      - db.cr1.8xlarge
-      - db.m1.medium
-      - db.m1.large
-      - db.m1.xlarge
+    - db.r4.16xlarge
+    - db.r4.8xlarge
+    - db.r4.4xlarge
+    - db.r4.2xlarge
+    - db.r4.xlarge
+    - db.r4.large
     ConstraintDescription: Must select a valid database instance type.
-    Default: db.m4.2xlarge
+    Default: db.r4.large
     Description: The name of the compute and memory capacity class of the DB instance.
     Type: String
   DBName:
@@ -60,7 +44,7 @@ Parameters:
   DBMasterUsername:
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
-    Default: admin
+    Default: rdsadmin
     Description: The database admin account username
     MaxLength: '16'
     MinLength: '1'
@@ -101,16 +85,18 @@ Resources:
       DBSubnetGroupName: !Ref AuroraDBSubnetGroup
       Engine: aurora-postgresql
       EngineVersion: '9.6.9'
+      DBClusterParameterGroupName: default.aurora-postgresql9.6
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterPassword
       Port: 5432
-      VpcSecurityGroupIds: 
-      - !Ref AuroraRDSSecurityGroup
+      # VpcSecurityGroupIds: 
+      # - !Ref AuroraRDSSecurityGroup
   AuroraDBPrimaryInstance:
     Type: 'AWS::RDS::DBInstance'
     Properties:
       Engine: aurora-postgresql
       EngineVersion: '9.6.9'
+      DBParameterGroupName: default.aurora-postgresql9.6
       DBClusterIdentifier: !Ref AuroraDBCluster
       DBInstanceClass: !Ref DBInstanceClass
       DBSubnetGroupName: !Ref AuroraDBSubnetGroup
@@ -121,6 +107,7 @@ Resources:
     Properties:
       Engine: aurora-postgresql
       EngineVersion: '9.6.9'
+      DBParameterGroupName: default.aurora-postgresql9.6
       DBClusterIdentifier: !Ref AuroraDBCluster
       DBInstanceClass: !Ref DBInstanceClass
       DBSubnetGroupName: !Ref AuroraDBSubnetGroup

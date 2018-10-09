@@ -32,6 +32,10 @@ Parameters:
     Type: Number
     Default: 4
 
+  VPCID:
+    Description: The VPC ID
+    Type: AWS::EC2::VPC::Id
+
   PrivateSubnet1ID:
     Description: The first subnet this ECS cluster should be deployed to
     Type: AWS::EC2::Subnet::Id
@@ -39,10 +43,6 @@ Parameters:
   PrivateSubnet2ID:
     Description: The second subnet this ECS cluster should be deployed to
     Type: AWS::EC2::Subnet::Id
-
-  SecurityGroup:
-    Description: Select the Security Group to use for the ECS cluster hosts
-    Type: AWS::EC2::SecurityGroup::Id
 
   ECSAMI:
     Description: The recommended AMI ID for ECS.
@@ -55,6 +55,12 @@ Resources:
     Properties:
       ClusterName: !Ref EnvironmentName
   
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: The ECS Security Group
+      VpcId: !Ref VPCID
+
   ECSAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -91,7 +97,7 @@ Resources:
       ImageId:  !Ref ECSAMI
       InstanceType: !Ref InstanceType
       SecurityGroups:
-      - !Ref SecurityGroup
+      - !Ref ECSSecurityGroup
       IamInstanceProfile: !Ref ECSInstanceProfile
       UserData:
         "Fn::Base64": !Sub |
@@ -293,6 +299,10 @@ Outputs:
     ECSServiceAutoScalingRole:
       Description: A reference to ECS service auto scaling role
       Value: !GetAtt ECSServiceAutoScalingRole.Arn
+
+    ECSSecurityGroup:
+      Description: A reference to the ECS Security Group
+      Value: !Ref ECSSecurityGroup
 
     ECSRole:
       Description: A reference to the ECS Role

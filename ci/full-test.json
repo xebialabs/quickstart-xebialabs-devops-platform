@@ -1,0 +1,38 @@
+[
+    {
+        "ParameterKey": "AvailabilityZones",
+        "ParameterValue": "$[taskcat_genaz_2]"
+    },
+    {
+        "ParameterKey": "XLDeployPassword",
+        "ParameterValue": "$[taskcat_genpass_8A]"
+    },
+    {
+        "ParameterKey": "XLReleasePassword",
+        "ParameterValue": "$[taskcat_genpass_8A]"
+    },
+    {
+        "ParameterKey": "XLDeployVersion",
+        "ParameterValue": "8.2.0"
+    },
+    {
+        "ParameterKey": "XLReleaseVersion",
+        "ParameterValue": "8.2.0-1"
+    },
+    {
+        "ParameterKey": "DBMasterPassword",
+        "ParameterValue": "$[taskcat_genpass_8A]"
+    },
+    {
+        "ParameterKey": "KeyPairName",
+        "ParameterValue": "jvanerp"
+    },
+    {
+        "ParameterKey": "QSS3BucketName",
+        "ParameterValue": "override"
+    },
+    {
+        "ParameterKey": "RemoteAccessCIDR",
+        "ParameterValue": "37.17.208.21/32"
+    }
+]
