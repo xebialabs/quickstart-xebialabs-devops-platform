@@ -7,12 +7,13 @@ Metadata:
     - Label:
         default: XebiaLabs DevOps Platform Configuration
       Parameters:
+      - EnvironmentName
       - XLPlatformInstanceType
       - InstallXLDeploy
       - XLDeployVersion
       - XLDeployPassword
       - InstallXLRelease
-      - InstallXLReleaseVersion
+      - XLReleaseVersion
       - XLReleasePassword
     - Label:
         default: VPC Network Configuration
@@ -58,6 +59,8 @@ Metadata:
         default: Install XL Release
       InstallXLDeploy:
         default: Install XL Deploy
+      EnvironmentName:
+        deault: Environment name
       VPCCIDR:
         default: VPC CIDR
       AvailabilityZones:
@@ -135,6 +138,10 @@ Parameters:
     Type: String
     Default: True
     AllowedValues: [True, False]
+  EnvironmentName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Description: The Environment name, defaults to the stack name.
+    Type: String
   VPCCIDR:
     Description: CIDR block for the VPC
     Type: String
@@ -247,19 +254,19 @@ Resources:
     Properties:
       TemplateURL: !Sub 
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      - { QSS3Region: !If [ GovCloudCondition, s3-us-gov-west-1, s3 ] }
       Parameters:
-        AvailabilityZones: !Join [',', !Ref 'AvailabilityZones']
-        KeyPairName: !Ref 'KeyPairName'
+        AvailabilityZones: !Join [ ',', !Ref AvailabilityZones ]
+        KeyPairName: !Ref KeyPairName
         NumberOfAZs: '2'
-        CreateAdditionalPrivateSubnets: true
-        PrivateSubnet1ACIDR: !Ref 'PrivateSubnet1CIDR'
-        PrivateSubnet2ACIDR: !Ref 'PrivateSubnet2CIDR'
-        PrivateSubnet1BCIDR: !Ref 'DataSubnet1CIDR'
-        PrivateSubnet2BCIDR: !Ref 'DataSubnet2CIDR'
-        PublicSubnet1CIDR: !Ref 'PublicSubnet1CIDR'
-        PublicSubnet2CIDR: !Ref 'PublicSubnet2CIDR'
-        VPCCIDR: !Ref 'VPCCIDR'
+        CreateAdditionalPrivateSubnets: 'true'
+        PrivateSubnet1ACIDR: !Ref PrivateSubnet1CIDR
+        PrivateSubnet2ACIDR: !Ref PrivateSubnet2CIDR
+        PrivateSubnet1BCIDR: !Ref DataSubnet1CIDR
+        PrivateSubnet2BCIDR: !Ref DataSubnet2CIDR
+        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
+        PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
+        VPCCIDR: !Ref VPCCIDR
   # LinuxBastionStack:
   #   Type: AWS::CloudFormation::Stack
   #   Properties:
@@ -281,10 +288,11 @@ Resources:
     Properties:
       TemplateURL: !Sub 
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/xl-devops-platform.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      - { QSS3Region: !If [ GovCloudCondition, s3-us-gov-west-1, s3 ] }
       Parameters:
-        VPCID: !GetAtt 'VPCStack.Outputs.VPCID'
-        VPCCIDR: !Ref VPCCIDR
+        EnvironmentName: !Ref EnvironmentName
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
+        RemoteAccessCIDR: !Ref RemoteAccessCIDR
         PrivateSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
         PrivateSubnet2ID: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
         DataSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1BID

@@ -32,41 +32,29 @@ Parameters:
     Type: Number
     Default: 4
 
-  VPCID:
-    Description: The VPC ID
-    Type: AWS::EC2::VPC::Id
-
-  PrivateSubnet1ID:
-    Description: The first subnet this ECS cluster should be deployed to
-    Type: AWS::EC2::Subnet::Id
-
-  PrivateSubnet2ID:
-    Description: The second subnet this ECS cluster should be deployed to
-    Type: AWS::EC2::Subnet::Id
+  Subnets:
+    Description: The private subnets this ECS cluster should be deployed to
+    Type: List<AWS::EC2::Subnet::Id>
 
   ECSAMI:
     Description: The recommended AMI ID for ECS.
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
 
+  ECSSecurityGroup:
+    Description: The security group to attach to the ECS cluster instances
+    Type: AWS::EC2::SecurityGroup::Id
+
 Resources: 
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Ref EnvironmentName
-  
-  ECSSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: The ECS Security Group
-      VpcId: !Ref VPCID
 
   ECSAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-      - !Ref PrivateSubnet1ID
-      - !Ref PrivateSubnet2ID
+      VPCZoneIdentifier: !Ref Subnets
       LaunchConfigurationName: !Ref ECSLaunchConfiguration
       MinSize: !Ref ClusterSize
       MaxSize: !Ref ClusterSize
@@ -202,7 +190,7 @@ Resources:
         }
       Policies:
         - PolicyName: ecs-service
-          PolicyDocument: |
+          PolicyDocument:
             {
               "Statement": [{
                 "Effect": "Allow",
@@ -282,7 +270,7 @@ Resources:
       - PolicyName: ecs-service-autoscaling
         PolicyDocument:
           Statement:
-            Effect: Allow
+          - Effect: Allow
             Action:
             - application-autoscaling:*
             - cloudwatch:DescribeAlarms
@@ -290,26 +278,59 @@ Resources:
             - ecs:DescribeServices
             - ecs:UpdateService
             Resource: "*"
+  ECSServiceRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      Path: /
+      RoleName: !Sub ${EnvironmentName}-ECSServiceRole-${AWS::Region}
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": [ "ecs.amazonaws.com" ]},
+            "Action": [ "sts:AssumeRole" ]
+          }]
+        }
+      Policies: 
+      - PolicyName: !Sub ecs-service-${AWS::StackName}
+        PolicyDocument: 
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": [
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:Describe*",
+                "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                "elasticloadbalancing:Describe*",
+                "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                "elasticloadbalancing:DeregisterTargets",
+                "elasticloadbalancing:DescribeTargetGroups",
+                "elasticloadbalancing:DescribeTargetHealth",
+                "elasticloadbalancing:RegisterTargets"
+              ],
+              "Resource": "*"
+            }]
+          }
 
 Outputs:
-    Cluster:
-      Description: A reference to the ECS cluster
-      Value: !Ref ECSCluster
+  Cluster:
+    Description: A reference to the ECS cluster
+    Value: !Ref ECSCluster
 
-    ECSServiceAutoScalingRole:
-      Description: A reference to ECS service auto scaling role
-      Value: !GetAtt ECSServiceAutoScalingRole.Arn
+  ECSServiceAutoScalingRole:
+    Description: A reference to ECS service auto scaling role
+    Value: !GetAtt ECSServiceAutoScalingRole.Arn
 
-    ECSSecurityGroup:
-      Description: A reference to the ECS Security Group
-      Value: !Ref ECSSecurityGroup
+  ECSServiceRole:
+    Description: A reference to ECS service role
+    Value: !GetAtt ECSServiceRole.Arn
 
-    ECSRole:
-      Description: A reference to the ECS Role
-      Value: !GetAtt ECSRole.Arn
+  ECSRole:
+    Description: A reference to the ECS Role
+    Value: !GetAtt ECSRole.Arn
 
-    ECSAutoScalingGroupName:
-      Description: A reference to ECS AutoScaling Group Name
-      Value: !Ref ECSAutoScalingGroup
-
+  ECSAutoScalingGroupName:
+    Description: A reference to ECS AutoScaling Group Name
+    Value: !Ref ECSAutoScalingGroup
 ...

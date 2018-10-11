@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ---
+# Metadata: 
+
+Parameters:
+  VPCID:
+    Description: The VPC Id
+    Type: AWS::EC2::VPC::Id
+  ECSCluster:
+    Description: The provisioned ECS Cluster ID
+    Type: String
+  ECSServiceRole:
+    Description: The ECS Service role
+    Type: String
+  LaunchType:
+    Description: The desired launch type, can be only be 'ECS EC2' at this moment
+    AllowedValues:
+    - ECS EC2
+    Type: String
+    Default: ECS EC2
+  Version:
+    Description: The version of XL Deploy to deploy
+    AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
+    Type: String
+  AdminPassword:
+    Description: The admin password of XL Deploy
+    MinLength: 8
+    Type: String
+    NoEcho: True
+  Port:
+    Description: The port to run XL Deploy on
+    AllowedPattern: ^[1-9][0-9]{3,4}$
+    Type: String
+    Default: '4516'
+  LoadBalancer:
+    Description: The Application Load Balancer to register with
+    Type: String
+  ALBSecurityGroup:
+    Description: The Application Load Balancer security group to attach ingress rules to
+    Type: AWS::EC2::SecurityGroup::Id
+  RemoteAccessCIDR:
+    Description: CIDR block for remote access
+    Type: String
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+
+# Mappings: 
+
+Conditions:
+  ShouldLaunchECSEC2: !Equals [ !Ref LaunchType, 'ECS EC2' ]
+  ShouldLaunchECSFargate: !Equals [ !Ref LaunchType, 'ECS Fargate' ]
+  ShouldLaunchECSCluster: !Or [ Condition: ShouldLaunchECSEC2, Condition: ShouldLaunchECSFargate]
+
+Resources:
+  XLDeployECSService:
+    Type: AWS::ECS::Service
+    DependsOn: XLDeployALBListener
+    Condition: ShouldLaunchECSCluster
+    Properties:
+      Cluster: !Ref ECSCluster
+      Role: !Ref ECSServiceRole
+      DesiredCount: 2
+      LaunchType: !If [ ShouldLaunchECSEC2, EC2, FARGATE ]
+      PlacementConstraints:
+      - Type: distinctInstance
+      PlacementStrategies:
+      - Type: spread
+        Field: 'attribute:ecs.availability-zone'
+      LoadBalancers:
+      - ContainerName: xl-deploy
+        ContainerPort: !Ref Port
+        TargetGroupArn: !Ref XLDeployTargetGroup
+      TaskDefinition: !Ref XLDeployTaskDefinition
+  XLDeployTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Condition: ShouldLaunchECSCluster 
+    Properties:
+      ContainerDefinitions:
+      - Name: xl-deploy
+        Image: !Join [ ':', [ xebialabs/xl-deploy, !Ref Version ] ]
+        Memory: 8096
+        Cpu: 4
+        PortMappings:
+        - ContainerPort: !Ref Port
+          Protocol: tcp
+        Environment:
+        - Name: ADMIN_PASSWORD
+          Value: !Ref AdminPassword
+        Hostname: xl-deploy
+  XLDeployALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: !Ref Port
+      Protocol: HTTP 
+      DefaultActions: 
+      - Type: forward
+        TargetGroupArn: !Ref XLDeployTargetGroup
+  XLDeployTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPCID
+      Port: !Ref Port
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: 300
+      HealthCheckPath: /deployit/ha/health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 30
+      HealthyThresholdCount: 2
+  XLReleaseIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref RemoteAccessCIDR
+      FromPort: !Ref Port
+      ToPort: !Ref Port
+      GroupId: !Ref ALBSecurityGroup
+      IpProtocol: tcp
+# Outputs:

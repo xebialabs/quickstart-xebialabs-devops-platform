@@ -2,15 +2,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: ---
 Parameters: 
-  PrivateSubnet1ID:
+  Subnets:
     Description: The first subnet the Aurora cluster should be deployed to
-    Type: AWS::EC2::Subnet::Id
-  PrivateSubnet2ID:
-    Description: The second subnet the Aurora cluster should be deployed to
-    Type: AWS::EC2::Subnet::Id
-  # AuroraRDSSecurityGroup:
-  #   Description: Aurora Security Group
-  #   Type: 'AWS::EC2::SecurityGroup::Id'
+    Type: List<AWS::EC2::Subnet::Id>
+  AuroraRDSSecurityGroup:
+    Description: Aurora Security Group
+    Type: 'AWS::EC2::SecurityGroup::Id'
   DBAutoMinorVersionUpgrade:
     AllowedValues:
       - 'true'
@@ -72,14 +69,12 @@ Conditions:
 
 Resources: 
   AuroraDBSubnetGroup:
-    Type: 'AWS::RDS::DBSubnetGroup'
+    Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: Subnets available for the RDS Aurora DB Instance
-      SubnetIds:
-        - !Ref PrivateSubnet1ID
-        - !Ref PrivateSubnet2ID
+      SubnetIds: !Ref Subnets
   AuroraDBCluster:
-    Type: 'AWS::RDS::DBCluster'
+    Type: AWS::RDS::DBCluster
     Properties:
       BackupRetentionPeriod: !Ref DBBackupRetentionPeriod
       DBSubnetGroupName: !Ref AuroraDBSubnetGroup
@@ -89,10 +84,10 @@ Resources:
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterPassword
       Port: 5432
-      # VpcSecurityGroupIds: 
-      # - !Ref AuroraRDSSecurityGroup
+      VpcSecurityGroupIds: 
+      - !Ref AuroraRDSSecurityGroup
   AuroraDBPrimaryInstance:
-    Type: 'AWS::RDS::DBInstance'
+    Type: AWS::RDS::DBInstance
     Properties:
       Engine: aurora-postgresql
       EngineVersion: '9.6.9'
@@ -102,7 +97,7 @@ Resources:
       DBSubnetGroupName: !Ref AuroraDBSubnetGroup
       AutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
   AuroraDBSecondaryInstance:
-    Type: 'AWS::RDS::DBInstance'
+    Type: AWS::RDS::DBInstance
     Condition: CreateReadReplica
     Properties:
       Engine: aurora-postgresql
