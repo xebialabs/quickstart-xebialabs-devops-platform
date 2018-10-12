@@ -78,8 +78,8 @@ Resources:
       ContainerDefinitions:
       - Name: xl-deploy
         Image: !Join [ ':', [ xebialabs/xl-deploy, !Ref Version ] ]
-        Memory: 8096
-        Cpu: 4
+        Memory: 4096
+        Cpu: 2
         PortMappings:
         - ContainerPort: !Ref Port
           Protocol: tcp
@@ -103,7 +103,9 @@ Resources:
       Port: !Ref Port
       Protocol: HTTP
       Matcher:
-        HttpCode: 200-299
+        # The healthcheck endpoint is protected by the license checker, which will return 402 if no license is present.
+        # Ensure that is treated as a healthy response also.
+        HttpCode: 200-299,402
       HealthCheckIntervalSeconds: 300
       HealthCheckPath: /deployit/ha/health
       HealthCheckProtocol: HTTP

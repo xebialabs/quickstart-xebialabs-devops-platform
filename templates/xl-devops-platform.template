@@ -77,22 +77,11 @@ Metadata:
 Parameters: 
   XLPlatformInstanceType:
     AllowedValues:
-    - r5.large
-    - r5.xlarge
-    - r4.large
-    - r4.xlarge
-    - c5.large
-    - c5.xlarge
-    - c5.2xlarge
-    - c4.large
-    - c4.xlarge
-    - c4.2xlarge
-    - t3.medium
-    - t3.large
-    - t3.xlarge
+    - m5.large
+    - m5.xlarge
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
-    Default: c5.large
+    Default: m5.large
   XLDeployPassword:
     Description: The administrator password for XL Deploy
     MinLength: 8
