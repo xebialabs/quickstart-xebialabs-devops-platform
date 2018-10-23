@@ -10,9 +10,11 @@ Metadata:
       - EnvironmentName
       - XLPlatformInstanceType
       - InstallXLDeploy
+      - XLDeployDockerImage
       - XLDeployVersion
       - XLDeployPassword
       - InstallXLRelease
+      - XLReleaseDockerImage
       - XLReleaseVersion
       - XLReleasePassword
     - Label:
@@ -47,6 +49,10 @@ Metadata:
   ParameterLabels:
       XLPlatformInstanceType:
         default: XL DevOps Platform Instance Type
+      XLDeployDockerImage:
+        default: XL Deploy Docker image
+      XLReleaseDockerImage:
+        default: XL Release Docker image
       XLDeployVersion:
         default: XL Deploy version
       XLReleaseVersion:
@@ -99,6 +105,14 @@ Parameters:
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
     Default: m5.large
+  XLDeployDockerImage:
+    Description: The path to the XL Deploy Docker image (registry/image)
+    Type: String
+    Default: xebialabs/xl-deploy
+  XLReleaseDockerImage:
+    Description: The path to the XL Release Docker image (registry/image)
+    Type: String
+    Default: xebialabs/xl-release
   XLDeployPassword:
     Description: The administrator password for XL Deploy
     MinLength: 8
@@ -289,9 +303,11 @@ Resources:
         XLPlatformInstanceType: !Ref XLPlatformInstanceType
         InstallXLDeploy: !Ref InstallXLDeploy
         XLDeployPassword: !Ref XLDeployPassword
+        XLDeployDockerImage: !Ref XLDeployDockerImage
         XLDeployVersion: !Ref XLDeployVersion
         InstallXLRelease: !Ref InstallXLRelease
         XLReleasePassword: !Ref XLReleasePassword
+        XLReleaseDockerImage: !Ref XLReleaseDockerImage
         XLReleaseVersion: !Ref XLReleaseVersion
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterPassword: !Ref DBMasterPassword

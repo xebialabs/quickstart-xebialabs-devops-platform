@@ -8,9 +8,11 @@ Metadata:
       Parameters:
       - XLPlatformInstanceType
       - InstallXLRelease
+      - XLReleaseDockerImage
       - XLReleaseVersion
       - XLReleasePassword
       - InstallXLDeploy
+      - XLDeployDockerImage
       - XLDeployVersion
       - XLDeployPassword
     - Label:
@@ -42,6 +44,10 @@ Metadata:
     ParameterLabels:
       XLPlatformInstanceType:
         default: XL DevOps Platform Instance Type
+      XLDeployDockerImage:
+        default: XL Deploy Docker image
+      XLReleaseDockerImage:
+        default: XL Release Docker image
       XLDeployPassword:
         default: XL Deploy administrator password
       XLReleasePassword:
@@ -82,6 +88,14 @@ Parameters:
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
     Default: m5.large
+  XLDeployDockerImage:
+    Description: The path to the XL Deploy Docker image (registry/image)
+    Type: String
+    Default: xebialabs/xl-deploy
+  XLReleaseDockerImage:
+    Description: The path to the XL Release Docker image (registry/image)
+    Type: String
+    Default: xebialabs/xl-release
   XLDeployPassword:
     Description: The administrator password for XL Deploy
     MinLength: 8
@@ -252,6 +266,7 @@ Resources:
         ALBSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
         AdminPassword: !Ref XLReleasePassword
         Version: !Ref XLReleaseVersion
+        DockerImage: !Ref XLReleaseDockerImage
         ECSCluster: !GetAtt ECSStack.Outputs.Cluster
         ECSServiceRole: !GetAtt ECSStack.Outputs.ECSServiceRole
   XLDeployApplication:
@@ -268,6 +283,7 @@ Resources:
         ALBSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
         AdminPassword: !Ref XLDeployPassword
         Version: !Ref XLDeployVersion
+        DockerImage: !Ref XLDeployDockerImage
         ECSCluster: !GetAtt ECSStack.Outputs.Cluster
         ECSServiceRole: !GetAtt ECSStack.Outputs.ECSServiceRole
 # Outputs:
