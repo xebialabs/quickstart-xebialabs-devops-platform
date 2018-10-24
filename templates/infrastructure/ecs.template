@@ -34,6 +34,10 @@ Parameters:
     Description: The security group to attach to the ECS cluster instances
     Type: AWS::EC2::SecurityGroup::Id
 
+  KeyPairName:
+    Description: The name of an existing public/private key pair, which allows you to securely connect to your instance after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+
 Resources: 
   ECSCluster:
     Type: AWS::ECS::Cluster
@@ -73,6 +77,7 @@ Resources:
     Properties:
       ImageId:  !Ref ECSAMI
       InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairName
       SecurityGroups:
       - !Ref ECSSecurityGroup
       IamInstanceProfile: !Ref ECSInstanceProfile
@@ -245,6 +250,21 @@ Resources:
               "Resource": "*"
             }]
           }
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Sub ${EnvironmentName}-ECSTaskExecutionRole-${AWS::Region}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ecs-tasks.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
 
 Outputs:
   Cluster:
@@ -262,6 +282,10 @@ Outputs:
   ECSRole:
     Description: A reference to the ECS Role
     Value: !GetAtt ECSInstanceRole.Arn
+
+  ECSTaskExecutionRole:
+    Description: A reference to the ECS Task Execution Role
+    Value: !GetAtt ECSTaskExecutionRole.Arn
 
   ECSAutoScalingGroupName:
     Description: A reference to ECS AutoScaling Group Name

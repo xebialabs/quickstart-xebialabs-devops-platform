@@ -7,7 +7,6 @@ Metadata:
     - Label:
         default: XebiaLabs DevOps Platform Configuration
       Parameters:
-      - EnvironmentName
       - XLPlatformInstanceType
       - InstallXLDeploy
       - XLDeployDockerImage
@@ -40,6 +39,7 @@ Metadata:
     - Label:
         default: General Settings
       Parameters:
+      - EnvironmentName
       - KeyPairName
     - Label:
         default: AWS Quick Start Configuration
@@ -126,8 +126,10 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: True
-    AllowedValues: [True, False]
+    Default: true
+    AllowedValues:
+    - true
+    - false
   XLReleaseVersion:
     Description: The version of XL Release to deploy
     AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
@@ -139,8 +141,10 @@ Parameters:
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: True
-    AllowedValues: [True, False]
+    Default: true
+    AllowedValues: 
+    - true
+    - false
   EnvironmentName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     Description: The Environment name, defaults to the stack name.
@@ -270,22 +274,22 @@ Resources:
         PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
         PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
         VPCCIDR: !Ref VPCCIDR
-  # LinuxBastionStack:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: !Sub 
-  #     - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-linux-bastion/templates/linux-bastion.template
-  #     - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
-  #     Parameters:
-  #       RemoteAccessCIDR: !Ref RemoteAccessCIDR
-  #       VPCID: !GetAtt VPCStack.Outputs.VPCID
-  #       PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
-  #       PublicSubnet2ID: !GetAtt VPCStack.Outputs.PublicSubnet2ID
-  #       QSS3BucketName: !Ref QSS3BucketName
-  #       BastionInstanceType: 't2.micro'
-  #       BastionAMIOS: 'Amazon-Linux-HVM'
-  #       KeyPairName: !Ref KeyPairName
-  #       QSS3KeyPrefix: !Join [ '', [ !Ref QSS3KeyPrefix, "submodules/quickstart-linux-bastion" ]]
+  LinuxBastionStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-linux-bastion/templates/linux-bastion.template
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        RemoteAccessCIDR: !Ref RemoteAccessCIDR
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
+        PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+        PublicSubnet2ID: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+        QSS3BucketName: !Ref QSS3BucketName
+        BastionInstanceType: 't2.micro'
+        BastionAMIOS: 'Amazon-Linux-HVM'
+        KeyPairName: !Ref KeyPairName
+        QSS3KeyPrefix: !Join [ '', [ !Ref QSS3KeyPrefix, "submodules/quickstart-linux-bastion" ]]
   XLDevOpsPlatformStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -300,6 +304,7 @@ Resources:
         PrivateSubnet2ID: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
         DataSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1BID
         DataSubnet2ID: !GetAtt VPCStack.Outputs.PrivateSubnet2BID
+        KeyPairName: !Ref KeyPairName
         XLPlatformInstanceType: !Ref XLPlatformInstanceType
         InstallXLDeploy: !Ref InstallXLDeploy
         XLDeployPassword: !Ref XLDeployPassword

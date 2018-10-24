@@ -4,6 +4,10 @@
         "ParameterValue": "$[taskcat_genaz_2]"
     },
     {
+        "ParameterKey": "InstallXLRelease",
+        "ParameterValue": "false"
+    },
+    {
         "ParameterKey": "XLDeployPassword",
         "ParameterValue": "$[taskcat_genpass_8A]"
     },
@@ -12,12 +16,20 @@
         "ParameterValue": "$[taskcat_genpass_8A]"
     },
     {
+        "ParameterKey": "XLDeployDockerImage",
+        "ParameterValue": "xebialabsunsupported/xl-deploy"
+    },
+    {
+        "ParameterKey": "XLReleaseDockerImage",
+        "ParameterValue": "xebialabsunsupported/xl-release"
+    },
+    {
         "ParameterKey": "XLDeployVersion",
-        "ParameterValue": "8.2.0"
+        "ParameterValue": "8.2.0-2"
     },
     {
         "ParameterKey": "XLReleaseVersion",
-        "ParameterValue": "8.2.0-1"
+        "ParameterValue": "8.2.0-2"
     },
     {
         "ParameterKey": "DBMasterPassword",

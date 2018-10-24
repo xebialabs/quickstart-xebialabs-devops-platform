@@ -36,6 +36,7 @@ Metadata:
         default: General Settings
       Parameters:
       - EnvironmentName
+      - KeyPairName
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
@@ -76,6 +77,8 @@ Metadata:
         default: Database administrator password
       # AuroraRDSSecurityGroup:
       #   default: Amazon Aurora Security Group
+      KeyPairName:
+        default: Key name
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
@@ -87,7 +90,7 @@ Parameters:
     - m5.xlarge
     Description: The instance type the XL DevOps Platform applications are created on
     Type: String
-    Default: m5.large
+    Default: m5.xlarge
   XLDeployDockerImage:
     Description: The path to the XL Deploy Docker image (registry/image)
     Type: String
@@ -117,17 +120,24 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: True
-    AllowedValues: [True, False]
+    Default: true
+    AllowedValues: 
+    - true
+    - false
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: True
-    AllowedValues: [True, False]
+    Default: true
+    AllowedValues: 
+    - true
+    - false
   EnvironmentName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     Description: The Environment name, defaults to the stack name.
     Type: String
+  KeyPairName:
+    Description: The name of an existing public/private key pair, which allows you to securely connect to your instance after it launches
+    Type: AWS::EC2::KeyPair::KeyName
   VPCID:
     Description: The VPC Id
     Type: AWS::EC2::VPC::Id
@@ -227,6 +237,7 @@ Resources:
         InstanceType: !Ref XLPlatformInstanceType
         ClusterSize: !If [ ShouldInstallAll, 4, 2 ]
         ECSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.ECSHostSecurityGroup
+        KeyPairName: !Ref KeyPairName
   LoadBalancerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -239,19 +250,19 @@ Resources:
         Subnets: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
   
-  RDSStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
-      Parameters:
-        Subnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
-        DBMasterUsername: !Ref DBMasterUsername
-        DBMasterPassword: !Ref DBMasterPassword
-        DBInstanceClass: !Ref DBInstanceClass
-        AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
-        DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+  # RDSStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 
+  #     - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds.template
+  #     - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+  #     Parameters:
+  #       Subnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
+  #       DBMasterUsername: !Ref DBMasterUsername
+  #       DBMasterPassword: !Ref DBMasterPassword
+  #       DBInstanceClass: !Ref DBInstanceClass
+  #       AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
+  #       DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
   XLReleaseApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
@@ -269,6 +280,7 @@ Resources:
         DockerImage: !Ref XLReleaseDockerImage
         ECSCluster: !GetAtt ECSStack.Outputs.Cluster
         ECSServiceRole: !GetAtt ECSStack.Outputs.ECSServiceRole
+        TaskExecutionRole: !GetAtt ECSStack.Outputs.ECSTaskExecutionRole
   XLDeployApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
@@ -286,4 +298,5 @@ Resources:
         DockerImage: !Ref XLDeployDockerImage
         ECSCluster: !GetAtt ECSStack.Outputs.Cluster
         ECSServiceRole: !GetAtt ECSStack.Outputs.ECSServiceRole
+        TaskExecutionRole: !GetAtt ECSStack.Outputs.ECSTaskExecutionRole
 # Outputs:
