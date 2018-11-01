@@ -50,6 +50,15 @@ Parameters:
   TaskExecutionRole:
     Description: The Task Execution Role
     Type: String
+  DBHost:
+    Description: The Postgres DB Host/Endpoint
+    Type: String
+  DBUser:
+    Description: The Postgres DB username
+    Type: String
+  DBPassword:
+    Description: The Postgres DB Password
+    Type: String
 
 # Mappings: 
 
@@ -66,7 +75,7 @@ Resources:
     Properties:
       Cluster: !Ref ECSCluster
       Role: !Ref ECSServiceRole
-      DesiredCount: 2
+      DesiredCount: 1
       LaunchType: !If [ ShouldLaunchECSEC2, EC2, FARGATE ]
       PlacementConstraints:
       - Type: distinctInstance
@@ -94,6 +103,16 @@ Resources:
         Environment:
         - Name: ADMIN_PASSWORD
           Value: !Ref AdminPassword
+        - Name: XL_CLUSTER_MODE
+          Value: default
+        - Name: XL_DB_URL
+          Value: !Sub "jdbc:postgresql://${DBHost}/XLDevOpsPlatformDB"
+        - Name: XL_DB_USERNAME
+          Value: !Ref DBUser
+        - Name: XL_DB_PASSWORD
+          Value: !Ref DBPassword
+        - Name: XL_METRICS_ENABLED
+          Value: "false"
         Hostname: xl-deploy
   XLDeployALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener

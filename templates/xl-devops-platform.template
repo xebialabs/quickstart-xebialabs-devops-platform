@@ -323,4 +323,7 @@ Resources:
         ECSCluster: !GetAtt ECSStack.Outputs.Cluster
         ECSServiceRole: !GetAtt ECSStack.Outputs.ECSServiceRole
         TaskExecutionRole: !GetAtt ECSStack.Outputs.ECSTaskExecutionRole
+        DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
+        DBUser: !Ref DBMasterUsername
+        DBPassword: !Ref DBMasterPassword
 # Outputs:
