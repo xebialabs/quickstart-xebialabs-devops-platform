@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: ---
 Parameters: 
   Subnets:
-    Description: The first subnet the Aurora cluster should be deployed to
+    Description: The subnets the Aurora cluster should be deployed to
     Type: List<AWS::EC2::Subnet::Id>
   AuroraRDSSecurityGroup:
     Description: Aurora Security Group
