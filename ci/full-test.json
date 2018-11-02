@@ -45,7 +45,7 @@
     },
     {
         "ParameterKey": "RemoteAccessCIDR",
-        "ParameterValue": "37.17.208.21/32"
+        "ParameterValue": "0.0.0.0/0"
     },
     {
         "ParameterKey": "EnvironmentName",

@@ -27,8 +27,9 @@
 import re
 
 from psycopg2._psycopg import ProgrammingError, InterfaceError
-from psycopg2.extensions import ISQLQuote, adapt, register_adapter, b
+from psycopg2.extensions import ISQLQuote, adapt, register_adapter
 from psycopg2.extensions import new_type, new_array_type, register_type
+
 
 class Range(object):
     """Python representation for a PostgreSQL |range|_ type.
@@ -78,46 +79,54 @@ class Range(object):
     @property
     def lower_inf(self):
         """`!True` if the range doesn't have a lower bound."""
-        if self._bounds is None: return False
+        if self._bounds is None:
+            return False
         return self._lower is None
 
     @property
     def upper_inf(self):
         """`!True` if the range doesn't have an upper bound."""
-        if self._bounds is None: return False
+        if self._bounds is None:
+            return False
         return self._upper is None
 
     @property
     def lower_inc(self):
         """`!True` if the lower bound is included in the range."""
-        if self._bounds is None: return False
-        if self._lower is None: return False
+        if self._bounds is None or self._lower is None:
+            return False
         return self._bounds[0] == '['
 
     @property
     def upper_inc(self):
         """`!True` if the upper bound is included in the range."""
-        if self._bounds is None: return False
-        if self._upper is None: return False
+        if self._bounds is None or self._upper is None:
+            return False
         return self._bounds[1] == ']'
 
     def __contains__(self, x):
-        if self._bounds is None: return False
+        if self._bounds is None:
+            return False
+
         if self._lower is not None:
             if self._bounds[0] == '[':
-                if x < self._lower: return False
+                if x < self._lower:
+                    return False
             else:
-                if x <= self._lower: return False
+                if x <= self._lower:
+                    return False
 
         if self._upper is not None:
             if self._bounds[1] == ']':
-                if x > self._upper: return False
+                if x > self._upper:
+                    return False
             else:
-                if x >= self._upper: return False
+                if x >= self._upper:
+                    return False
 
         return True
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self._bounds is not None
 
     def __eq__(self, other):
@@ -170,6 +179,17 @@ class Range(object):
             return True
         else:
             return self.__gt__(other)
+
+    def __getstate__(self):
+        return dict(
+            (slot, getattr(self, slot))
+            for slot in self.__slots__
+            if hasattr(self, slot)
+        )
+
+    def __setstate__(self, state):
+        for slot, value in list(state.items()):
+            setattr(self, slot, value)
 
 
 def register_range(pgrange, pyrange, conn_or_curs, globally=False):
@@ -229,7 +249,7 @@ class RangeAdapter(object):
 
         r = self.adapted
         if r.isempty:
-            return b("'empty'::" + self.name)
+            return b"'empty'::" + self.name.encode('utf8')
 
         if r.lower is not None:
             a = adapt(r.lower)
@@ -237,7 +257,7 @@ class RangeAdapter(object):
                 a.prepare(self._conn)
             lower = a.getquoted()
         else:
-            lower = b('NULL')
+            lower = b'NULL'
 
         if r.upper is not None:
             a = adapt(r.upper)
@@ -245,10 +265,10 @@ class RangeAdapter(object):
                 a.prepare(self._conn)
             upper = a.getquoted()
         else:
-            upper = b('NULL')
+            upper = b'NULL'
 
-        return b(self.name + '(') + lower + b(', ') + upper \
-                + b(", '%s')" % r._bounds)
+        return self.name.encode('utf8') + b'(' + lower + b', ' + upper \
+            + b", '" + r._bounds.encode('utf8') + b"')"
 
 
 class RangeCaster(object):
@@ -279,12 +299,13 @@ class RangeCaster(object):
         # an implementation detail and is not documented. It is currently used
         # for the numeric ranges.
         self.adapter = None
-        if isinstance(pgrange, basestring):
+        if isinstance(pgrange, str):
             self.adapter = type(pgrange, (RangeAdapter,), {})
             self.adapter.name = pgrange
         else:
             try:
-                if issubclass(pgrange, RangeAdapter) and pgrange is not RangeAdapter:
+                if issubclass(pgrange, RangeAdapter) \
+                        and pgrange is not RangeAdapter:
                     self.adapter = pgrange
             except TypeError:
                 pass
@@ -295,7 +316,7 @@ class RangeCaster(object):
 
         self.range = None
         try:
-            if isinstance(pyrange, basestring):
+            if isinstance(pyrange, str):
                 self.range = type(pyrange, (Range,), {})
             if issubclass(pyrange, Range) and pyrange is not Range:
                 self.range = pyrange
@@ -425,13 +446,16 @@ class NumericRange(Range):
     """
     pass
 
+
 class DateRange(Range):
     """Represents :sql:`daterange` values."""
     pass
 
+
 class DateTimeRange(Range):
     """Represents :sql:`tsrange` values."""
     pass
+
 
 class DateTimeTZRange(Range):
     """Represents :sql:`tstzrange` values."""
@@ -448,7 +472,7 @@ class NumberRangeAdapter(RangeAdapter):
     def getquoted(self):
         r = self.adapted
         if r.isempty:
-            return b("'empty'")
+            return b"'empty'"
 
         if not r.lower_inf:
             # not exactly: we are relying that none of these object is really
@@ -497,5 +521,3 @@ tsrange_caster._register()
 tstzrange_caster = RangeCaster('tstzrange', DateTimeTZRange,
     oid=3910, subtype_oid=1184, array_oid=3911)
 tstzrange_caster._register()
-
-

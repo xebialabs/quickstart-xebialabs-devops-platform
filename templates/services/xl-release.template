@@ -50,7 +50,18 @@ Parameters:
   TaskExecutionRole:
     Description: The Task Execution Role
     Type: String
-
+  DBHost:
+    Description: The Postgres DB Host/Endpoint
+    Type: String
+  DBUser:
+    Description: The Postgres DB username
+    Type: String
+  DBPassword:
+    Description: The Postgres DB Password
+    Type: String
+  CreateDBLambdaFunction:
+    Description: The Arn of the Create Database lambda function
+    Type: String
 # Mappings: 
 
 Conditions:
@@ -59,9 +70,26 @@ Conditions:
   ShouldLaunchECSCluster: !Or [ Condition: ShouldLaunchECSEC2, Condition: ShouldLaunchECSFargate]
 
 Resources:
+  # CreateXLReleaseDatabase:
+  #   Type: Custom::CreateXLReleaseDatabase
+  #   Properties:
+  #     ServiceToken: !Ref CreateDBLambdaFunction
+  #     DBName: xl-release
+  #     DBHost: !Ref DBHost
+  #     DBUser: !Ref DBUser
+  #     DBPassword: !Ref DBPassword
+  # CreateXLReleaseArchiveDatabase:
+  #   Type: Custom::CreateXLReleaseArchiveDatabase
+  #   Properties:
+  #     ServiceToken: !Ref CreateDBLambdaFunction
+  #     DBName: xl-release-archive
+  #     DBHost: !Ref DBHost
+  #     DBUser: !Ref DBUser
+  #     DBPassword: !Ref DBPassword
   XLReleaseECSService:
     Type: AWS::ECS::Service
-    DependsOn: XLReleaseALBListener
+    # TODO Add , CreateXLReleaseArchiveDatabase, CreateXLReleaseDatabase
+    DependsOn: [ XLReleaseALBListener ]
     Condition: ShouldLaunchECSCluster
     Properties:
       Cluster: !Ref ECSCluster
@@ -94,6 +122,14 @@ Resources:
         Environment:
         - Name: ADMIN_PASSWORD
           Value: !Ref AdminPassword
+        - Name: XL_DB_URL
+          Value: !Sub "jdbc:postgresql://${DBHost}/xl-release"
+        - Name: XL_DB_USERNAME
+          Value: !Ref DBUser
+        - Name: XL_DB_PASSWORD
+          Value: !Ref DBPassword
+        - Name: XL_METRICS_ENABLED
+          Value: "false"
         Hostname: xl-release
   XLReleaseALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener

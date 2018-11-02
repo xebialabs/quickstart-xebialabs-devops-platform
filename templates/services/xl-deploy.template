@@ -59,6 +59,9 @@ Parameters:
   DBPassword:
     Description: The Postgres DB Password
     Type: String
+  CreateDBLambdaFunction:
+    Description: The Arn of the Create Database lambda function
+    Type: String
 
 # Mappings: 
 
@@ -68,9 +71,18 @@ Conditions:
   ShouldLaunchECSCluster: !Or [ Condition: ShouldLaunchECSEC2, Condition: ShouldLaunchECSFargate]
 
 Resources:
+  # CreateXLDeployDatabase:
+  #   Type: Custom::CreateXLDeployDatabase
+  #   Properties:
+  #     ServiceToken: !Ref CreateDBLambdaFunction
+  #     DBName: xl-deploy
+  #     DBHost: !Ref DBHost
+  #     DBUser: !Ref DBUser
+  #     DBPassword: !Ref DBPassword
   XLDeployECSService:
     Type: AWS::ECS::Service
-    DependsOn: XLDeployALBListener
+    # TODO Add CreateXLDeployDatabase
+    DependsOn: [ XLDeployALBListener ]
     Condition: ShouldLaunchECSCluster
     Properties:
       Cluster: !Ref ECSCluster

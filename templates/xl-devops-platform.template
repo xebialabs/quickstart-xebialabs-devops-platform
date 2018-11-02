@@ -39,6 +39,7 @@ Metadata:
       Parameters:
       - EnvironmentName
       - KeyPairName
+      - BastionSecurityGroup
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
@@ -85,6 +86,8 @@ Metadata:
       #   default: Amazon Aurora Security Group
       KeyPairName:
         default: Key name
+      BastionSecurityGroup:
+        default: Bastion Security group
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
@@ -144,6 +147,9 @@ Parameters:
   KeyPairName:
     Description: The name of an existing public/private key pair, which allows you to securely connect to your instance after it launches
     Type: AWS::EC2::KeyPair::KeyName
+  BastionSecurityGroup:
+    Description: The Bastion Security Group that allows SSH access to the ECS machines
+    Type: AWS::EC2::SecurityGroup::Id
   VPCID:
     Description: The VPC Id
     Type: AWS::EC2::VPC::Id
@@ -238,6 +244,7 @@ Resources:
       Parameters:
         EnvironmentName: !If [ EnvironmentNameSet, !Ref EnvironmentName, !Ref "AWS::StackName" ]
         VPCID: !Ref VPCID
+        BastionSecurityGroup: !Ref BastionSecurityGroup
   ECSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -276,17 +283,17 @@ Resources:
         DBInstanceClass: !Ref DBInstanceClass
         AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
         DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
-  # CreateDBLambda:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: !Sub 
-  #     - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
-  #     - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
-  #     Parameters:
-  #       AuroraSubnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
-  #       AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
-  #       QSS3BucketName: !Ref QSS3BucketName
-  #       QSS3KeyPrefix: !Ref QSS3KeyPrefix
+  CreateDBLambda:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        AuroraSubnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
+        AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   XLReleaseApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
@@ -305,6 +312,10 @@ Resources:
         ECSCluster: !GetAtt ECSStack.Outputs.Cluster
         ECSServiceRole: !GetAtt ECSStack.Outputs.ECSServiceRole
         TaskExecutionRole: !GetAtt ECSStack.Outputs.ECSTaskExecutionRole
+        DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
+        DBUser: !Ref DBMasterUsername
+        DBPassword: !Ref DBMasterPassword
+        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
   XLDeployApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
@@ -326,4 +337,5 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
+        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
 # Outputs:
