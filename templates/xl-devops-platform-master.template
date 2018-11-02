@@ -324,5 +324,6 @@ Resources:
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         BastionSecurityGroup: !GetAtt LinuxBastionStack.Outputs.BastionSecurityGroupID
+        VPCCIDR: !Ref VPCCIDR
 # Outputs:
 ...

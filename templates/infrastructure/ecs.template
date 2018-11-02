@@ -37,6 +37,14 @@ Parameters:
   KeyPairName:
     Description: The name of an existing public/private key pair, which allows you to securely connect to your instance after it launches
     Type: AWS::EC2::KeyPair::KeyName
+  MountPoint:
+    Description: The Linux mount point for the EFS volume
+    Type: String
+    MinLength: '1'
+    Default: /mnt/efs
+  Filesystem:
+    Description: EFS FileSystem to be used on ECS for persistent sotrage
+    Type: String
 
 Resources: 
   ECSCluster:
@@ -86,19 +94,25 @@ Resources:
           #!/bin/bash
           yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
           yum install -y aws-cfn-bootstrap hibagent
-          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration --configsets MountConfig
           /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
           /usr/bin/enable-ec2-spot-hibernation
     Metadata:
       AWS::CloudFormation::Init:
-        config:
+        configSets:
+          MountConfig:
+          - setup
+          - mount
+        setup:
           packages:
             yum:
+              nfs-utils: []
               awslogs: []
-
           commands:
             01_add_instance_to_cluster:
               command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+            02_createdir:
+              command: !Sub "mkdir -p /${MountPoint}"
           files:
             "/etc/cfn/cfn-hup.conf":
               mode: 000400
@@ -153,6 +167,18 @@ Resources:
                 log_group_name = ${ECSCluster}-/var/log/ecs/audit.log
                 log_stream_name = ${ECSCluster}
                 datetime_format = %Y-%m-%dT%H:%M:%SZ
+        mount:
+          commands:
+            01_mount:
+              command: !Sub >
+                mount -t nfs4 -o nfsvers=4.1 ${Filesystem}.efs.${AWS::Region}.amazonaws.com:/ /${MountPoint}
+            02_fstab:
+              command: !Sub >
+                echo ${Filesystem}.efs.${AWS::Region}.amazonaws.com:/ /${MountPoint} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0 >> /etc/fstab
+            03_permissions:
+              command: !Sub "chown -R ec2-user:ec2-user /${MountPoint}"
+            04_restart_docker_and_ecs:
+              command: !Sub "service docker restart && start ecs"
           services:
             sysvinit:
               cfn-hup:
