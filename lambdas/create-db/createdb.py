@@ -45,9 +45,15 @@ def create_database(event, context):
             'Reason': 'Could not connect to the Postgres DB'
         }
     else:
-        cursor = conn.cursor()
-        cursor.execute("CREATE DATABASE %s WITH OWNER %s" % (db_name, db_user))
-        conn.commit()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("CREATE DATABASE %s WITH OWNER %s" % (db_name, db_user))
+            conn.commit()
+        except Exception as e:
+            return {
+                'Status': 'FAILED',
+                'Reason': str(e)
+            }
     finally:
         if cursor:
             cursor.close()
