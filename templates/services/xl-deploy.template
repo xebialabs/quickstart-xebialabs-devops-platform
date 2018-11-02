@@ -63,7 +63,12 @@ Parameters:
     Description: The Arn of the Create Database lambda function
     Type: String
 
-# Mappings: 
+  MountPoint:
+    Description: The Linux mount point for the EFS volume
+    Type: String
+    MinLength: '1'
+    Default: /mnt/efs
+# Mappings:
 
 Conditions:
   ShouldLaunchECSEC2: !Equals [ !Ref LaunchType, 'ECS EC2' ]
@@ -125,7 +130,14 @@ Resources:
           Value: !Ref DBPassword
         - Name: XL_METRICS_ENABLED
           Value: "false"
-        Hostname: xl-deploy
+        MountPoints:
+        - ContainerPath: "/opt/xebialabs/xl-deploy/work"
+          SourceVolume: xl-deploy-work-efs
+      Volumes:
+      - Host:
+          SourcePath: !Sub "${MountPoint}/xl-deploy"
+        Name: xl-deploy-work-efs
+      Hostname: xl-deploy
   XLDeployALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:

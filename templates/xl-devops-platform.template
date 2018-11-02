@@ -226,7 +226,18 @@ Parameters:
     Default: db.r4.large
     Description: The name of the compute and memory capacity class of the DB instance.
     Type: String
-# Mappings: 
+  VPCCIDR:
+    Description: Enter the CIDR Range for your VPC
+    Type: String
+    Default: 10.0.0.0/19
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  MountPoint:
+    Description: The Linux mount point for the EFS volume
+    Type: String
+    MinLength: '1'
+    Default: /mnt/efs
+# Mappings:
 
 Conditions: 
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
@@ -245,8 +256,20 @@ Resources:
         EnvironmentName: !If [ EnvironmentNameSet, !Ref EnvironmentName, !Ref "AWS::StackName" ]
         VPCID: !Ref VPCID
         BastionSecurityGroup: !Ref BastionSecurityGroup
+  EFSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/efs.template
+      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      Parameters:
+        EnvironmentName: !If [ EnvironmentNameSet, !Ref EnvironmentName, !Ref "AWS::StackName" ]
+        VPCID: !Ref VPCID
+        VPCCIDR: !Ref VPCCIDR
+        Subnets: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
   ECSStack:
     Type: AWS::CloudFormation::Stack
+    DependsOn: EFSStack
     Properties:
       TemplateURL: !Sub 
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/ecs.template
@@ -258,10 +281,12 @@ Resources:
         ClusterSize: !If [ ShouldInstallAll, 4, 2 ]
         ECSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.ECSHostSecurityGroup
         KeyPairName: !Ref KeyPairName
+        MountPoint: !Ref MountPoint
+        Filesystem: !GetAtt EFSStack.Outputs.Filesystem
   LoadBalancerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
+      TemplateURL: !Sub
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/alb.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
@@ -269,11 +294,11 @@ Resources:
         VPCID: !Ref VPCID
         Subnets: !Join [ ',', [ !Ref PublicSubnet1ID, !Ref PublicSubnet2ID ]]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
-  
+
   RDSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
+      TemplateURL: !Sub
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
@@ -286,7 +311,7 @@ Resources:
   CreateDBLambda:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
+      TemplateURL: !Sub
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
@@ -295,11 +320,12 @@ Resources:
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   XLReleaseApplication:
+  CreateDBLambda:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
     Properties:
-      TemplateURL: !Sub 
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-release.template
+      TemplateURL: !Sub
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         VPCID: !Ref VPCID
@@ -320,7 +346,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
     Properties:
-      TemplateURL: !Sub 
+      TemplateURL: !Sub
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-deploy.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
