@@ -164,7 +164,6 @@ Resources:
     DependsOn: CopyZips
     Properties:
       Description: Lambda function to create an RDS database
-      FunctionName: CreateDatabase
       Handler: createdb.handler
       MemorySize: 128
       Role: !GetAtt RDSLambdaRole.Arn

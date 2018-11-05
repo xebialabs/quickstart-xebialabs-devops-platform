@@ -4,10 +4,6 @@
         "ParameterValue": "$[taskcat_genaz_2]"
     },
     {
-        "ParameterKey": "InstallXLRelease",
-        "ParameterValue": "false"
-    },
-    {
         "ParameterKey": "XLDeployPassword",
         "ParameterValue": "$[taskcat_genpass_8A]"
     },
@@ -22,6 +18,14 @@
     {
         "ParameterKey": "XLReleaseDockerImage",
         "ParameterValue": "xebialabsunsupported/xl-release"
+    },
+    {
+        "ParameterKey": "XLDeployClusterMode",
+        "ParameterValue": "hot-standby"
+    },
+    {
+        "ParameterKey": "XLReleaseClusterMode",
+        "ParameterValue": "full"
     },
     {
         "ParameterKey": "XLDeployVersion",

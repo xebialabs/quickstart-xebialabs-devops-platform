@@ -175,14 +175,14 @@ Resources:
             02_fstab:
               command: !Sub >
                 echo ${Filesystem}.efs.${AWS::Region}.amazonaws.com:/ /${MountPoint} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0 >> /etc/fstab
-           #03_permissions:
-           #  command: !Sub "chown -R ec2-user:ec2-user /${MountPoint}"
+            # 03_permissions:
+            #  command: !Sub "chown -R ec2-user:ec2-user /${MountPoint}"
             03_permissions_ecs_xld:
-              command: !Sub "mkdir -p /${MountPoint}/xl-deploy/repository mkdir -p /${MountPoint}/xl-deploy/work && chmod g+w -R /${MountPoint}"
+              command: !Sub "mkdir -p /${MountPoint}/xl-deploy/repository && mkdir -p /${MountPoint}/xl-deploy/work && chmod g+w -R /${MountPoint}"
             04_permissions_ecs_xlr:
-              command: !Sub "mkdir -p /${MountPoint}/xl-release/repository mkdir -p /${MountPoint}/xl-release/work && chmod g+w -R /${MountPoint}"
+              command: !Sub "mkdir -p /${MountPoint}/xl-release/repository && mkdir -p /${MountPoint}/xl-release/work && chmod g+w -R /${MountPoint}"
             05_restart_docker_and_ecs:
-              command: !Sub "service docker restart && start ecs"
+              command: "service docker restart && start ecs"
           services:
             sysvinit:
               cfn-hup:

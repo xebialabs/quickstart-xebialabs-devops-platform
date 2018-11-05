@@ -11,10 +11,14 @@ Metadata:
       - XLReleaseDockerImage
       - XLReleaseVersion
       - XLReleasePassword
+      - XLReleaseClusterMode
+      - XLReleaseLicense
       - InstallXLDeploy
       - XLDeployDockerImage
       - XLDeployVersion
       - XLDeployPassword
+      - XLDeployClusterMode
+      - XLDeployLicense
     - Label:
         default: VPC Network Configuration
       Parameters:
@@ -64,6 +68,14 @@ Metadata:
         default: Install XL Release
       InstallXLDeploy:
         default: Install XL Deploy
+      XLDeployClusterMode:
+        default: XL Deploy Cluster mode
+      XLReleaseClusterMode:
+        default: XL Release Cluster mode
+      XLDeployLicense:
+        default: XL Deploy license
+      XLReleaseLicense:
+        default: XL Release license
       EnvironmentName:
         deault: Environment name
       PublicSubnet1ID:
@@ -237,6 +249,38 @@ Parameters:
     Type: String
     MinLength: '1'
     Default: /mnt/efs
+  UseExternalDB:
+    Description: Use an external Database
+    AllowedValues:
+    - true
+    - false
+    Default: true
+    Type: String
+  XLDeployClusterMode:
+    Description: Set the clustermode for XL Deploy
+    AllowedValues:
+    - default
+    - hot-standby
+    Default: default
+    Type: String
+  XLReleaseClusterMode:
+    Description: Set the clustermode for XL Release
+    AllowedValues:
+    - default
+    - hot-standby
+    - full
+    Default: default
+    Type: String
+  XLDeployLicense:
+    Description: The (Base64 encoded) license for XL Deploy
+    Type: String
+    AllowedPattern: '[0-9A-Za-z=+/]*'
+    Default: trial
+  XLReleaseLicense:
+    Description: The (Base64 encoded) license for XL Release
+    Type: String
+    AllowedPattern: '[0-9A-Za-z=+/]*'
+    Default: trial
 # Mappings:
 
 Conditions: 
@@ -245,6 +289,9 @@ Conditions:
   ShouldInstallXLRelease: !Equals [ !Ref InstallXLRelease, True ]
   ShouldInstallAll: !And [ Condition: ShouldInstallXLDeploy, Condition: ShouldInstallXLRelease ]
   EnvironmentNameSet: !Not [ !Equals [ !Ref EnvironmentName, "" ]]
+  ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, true ]
+  XLDeployLicenseProvided: !Not [ !Equals [ !Ref XLDeployLicense, 'trial' ] ]
+  XLReleaseLicenseProvided: !Not [ !Equals [ !Ref XLReleaseLicense, 'trial' ] ]
 Resources:
   SecurityGroupsStack:
     Type: AWS::CloudFormation::Stack
@@ -269,7 +316,6 @@ Resources:
         Subnets: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
   ECSStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: EFSStack
     Properties:
       TemplateURL: !Sub 
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/ecs.template
@@ -297,6 +343,7 @@ Resources:
 
   RDSStack:
     Type: AWS::CloudFormation::Stack
+    Condition: ShouldUseExternalDB
     Properties:
       TemplateURL: !Sub
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds.template
@@ -342,6 +389,9 @@ Resources:
         DBPassword: !Ref DBMasterPassword
         CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
+        ClusterMode: !Ref XLReleaseClusterMode
+        UseExternalDB: !Ref UseExternalDB
+        License: !If [ XLReleaseLicenseProvided, !Ref XLReleaseLicense, !Ref "AWS::NoValue" ]
   XLDeployApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
@@ -365,4 +415,7 @@ Resources:
         DBPassword: !Ref DBMasterPassword
         CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
+        ClusterMode: !Ref XLDeployClusterMode
+        UseExternalDB: !Ref UseExternalDB
+        License: !If [ XLDeployLicenseProvided, !Ref XLDeployLicense, !Ref "AWS::NoValue" ]
 # Outputs:

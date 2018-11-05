@@ -12,10 +12,14 @@ Metadata:
       - XLDeployDockerImage
       - XLDeployVersion
       - XLDeployPassword
+      - XLDeployClusterMode
+      - XLDeployLicense
       - InstallXLRelease
       - XLReleaseDockerImage
       - XLReleaseVersion
       - XLReleasePassword
+      - XLReleaseClusterMode
+      - XLReleaseLicense
     - Label:
         default: VPC Network Configuration
       Parameters:
@@ -65,6 +69,14 @@ Metadata:
         default: Install XL Release
       InstallXLDeploy:
         default: Install XL Deploy
+      XLDeployClusterMode:
+        default: XL Deploy Cluster mode
+      XLReleaseClusterMode:
+        default: XL Release Cluster mode
+      XLDeployLicense:
+        default: XL Deploy license
+      XLReleaseLicense:
+        default: XL Release license
       EnvironmentName:
         deault: Environment name
       VPCCIDR:
@@ -250,11 +262,37 @@ Parameters:
     Default: db.r4.large
     Description: The name of the compute and memory capacity class of the DB instance.
     Type: String    
+  XLDeployClusterMode:
+    Description: Set the clustermode for XL Deploy
+    AllowedValues:
+    - default
+    - hot-standby
+    Default: default
+    Type: String
+  XLReleaseClusterMode:
+    Description: Set the clustermode for XL Release
+    AllowedValues:
+    - default
+    - hot-standby
+    - full
+    Default: default
+    Type: String
+  XLDeployLicense:
+    Description: The (Base64 encoded) license for XL Deploy
+    Type: String
+    AllowedPattern: '[0-9A-Za-z=+/]*'
+    Default: trial
+  XLReleaseLicense:
+    Description: The (Base64 encoded) license for XL Release
+    Type: String
+    AllowedPattern: '[0-9A-Za-z=+/]*'
+    Default: trial
 # Mappings: 
 
 Conditions: 
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
-
+  XLDeployLicenseProvided: !Not [ !Equals [ !Ref XLDeployLicense, 'trial' ] ]
+  XLReleaseLicenseProvided: !Not [ !Equals [ !Ref XLReleaseLicense, 'trial' ] ]
 Resources: 
   VPCStack:
     Type: AWS::CloudFormation::Stack
@@ -292,7 +330,6 @@ Resources:
         QSS3KeyPrefix: !Join [ '', [ !Ref QSS3KeyPrefix, "submodules/quickstart-linux-bastion/" ]]
   XLDevOpsPlatformStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: LinuxBastionStack
     Properties:
       TemplateURL: !Sub 
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/xl-devops-platform.template
@@ -325,5 +362,9 @@ Resources:
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         BastionSecurityGroup: !GetAtt LinuxBastionStack.Outputs.BastionSecurityGroupID
         VPCCIDR: !Ref VPCCIDR
+        XLReleaseClusterMode: !Ref XLReleaseClusterMode
+        XLDeployClusterMode: !Ref XLDeployClusterMode
+        XLReleaseLicense: !If [ XLReleaseLicenseProvided, !Ref XLReleaseLicense, !Ref "AWS::NoValue" ]
+        XLDeployLicense: !If [ XLDeployLicenseProvided, !Ref XLDeployLicense, !Ref "AWS::NoValue" ]
 # Outputs:
 ...

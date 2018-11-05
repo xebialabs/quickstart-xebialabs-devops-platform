@@ -43,6 +43,14 @@ Resources:
       - Key: Name
         Value: !Sub ${EnvironmentName}-RDS
 
+  RDSIngressSelf:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref RDSSecurityGroup
+      SourceSecurityGroupId: !Ref RDSSecurityGroup
+      IpProtocol: '-1'
+
+
   # This security group defines who/where is allowed to access the Application Load Balancer.
   # The Ingress rules will be added to this Security Group by the subtemplates of this stack.
   LoadBalancerSecurityGroup:

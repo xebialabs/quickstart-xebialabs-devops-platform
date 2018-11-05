@@ -59,6 +59,7 @@ Parameters:
   DBPassword:
     Description: The Postgres DB Password
     Type: String
+    NoEcho: True
   CreateDBLambdaFunction:
     Description: The Arn of the Create Database lambda function
     Type: String
@@ -66,31 +67,53 @@ Parameters:
     Description: The Linux mount point for the EFS volume
     Type: String
     MinLength: '1'
+    Default: /mnt/efs
+  UseExternalDB:
+    Description: Use an external Database
+    AllowedValues:
+    - true
+    - false
+    Default: true
+    Type: String
+  ClusterMode:
+    Description: Set the clustermode for XL Deploy
+    AllowedValues:
+    - default
+    - hot-standby
+    Default: default
+    Type: String
+  License:
+    Description: The (Base64 encoded) license for XL Deploy
+    Type: String
+    AllowedPattern: '[0-9A-Za-z=+/]*'
+    Default: trial
 # Mappings:
 
 Conditions:
   ShouldLaunchECSEC2: !Equals [ !Ref LaunchType, 'ECS EC2' ]
   ShouldLaunchECSFargate: !Equals [ !Ref LaunchType, 'ECS Fargate' ]
   ShouldLaunchECSCluster: !Or [ Condition: ShouldLaunchECSEC2, Condition: ShouldLaunchECSFargate]
-
+  ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, 'true' ]
+  ShouldLaunchCluster: !Not [ !Equals [ !Ref ClusterMode, 'default' ] ]
+  LicenseProvided: !Not [ !Equals [ !Ref License, 'trial' ] ]
 Resources:
-  # CreateXLDeployDatabase:
-  #   Type: Custom::CreateXLDeployDatabase
-  #   Properties:
-  #     ServiceToken: !Ref CreateDBLambdaFunction
-  #     DBName: xl-deploy
-  #     DBHost: !Ref DBHost
-  #     DBUser: !Ref DBUser
-  #     DBPassword: !Ref DBPassword
+  CreateXLDeployDatabase:
+    Type: Custom::CreateXLDeployDatabase
+    Condition: ShouldUseExternalDB
+    Properties:
+      ServiceToken: !Ref CreateDBLambdaFunction
+      DBName: xldeploy
+      DBHost: !Ref DBHost
+      DBUser: !Ref DBUser
+      DBPassword: !Ref DBPassword
   XLDeployECSService:
     Type: AWS::ECS::Service
-    # TODO Add CreateXLDeployDatabase
-    DependsOn: [ XLDeployALBListener ]
+    DependsOn: [ XLDeployALBListener, CreateXLDeployDatabase ]
     Condition: ShouldLaunchECSCluster
     Properties:
       Cluster: !Ref ECSCluster
       Role: !Ref ECSServiceRole
-      DesiredCount: 1
+      DesiredCount: !If [ ShouldLaunchCluster, 2, 1 ]
       LaunchType: !If [ ShouldLaunchECSEC2, EC2, FARGATE ]
       PlacementConstraints:
       - Type: distinctInstance
@@ -119,15 +142,29 @@ Resources:
         - Name: ADMIN_PASSWORD
           Value: !Ref AdminPassword
         - Name: XL_CLUSTER_MODE
-          Value: default
+          Value: !Ref ClusterMode
         - Name: XL_DB_URL
-          Value: !Sub "jdbc:postgresql://${DBHost}/XLDevOpsPlatformDB"
+          Value: !If
+          - ShouldUseExternalDB
+          - !Sub "jdbc:postgresql://${DBHost}/xldeploy"
+          - "jdbc:h2:file:/opt/xebialabs/xl-deploy-server/repository/xldeploy"
         - Name: XL_DB_USERNAME
-          Value: !Ref DBUser
+          Value: !If
+          - ShouldUseExternalDB
+          - !Ref DBUser
+          - sa
         - Name: XL_DB_PASSWORD
-          Value: !Ref DBPassword
+          Value: !If
+          - ShouldUseExternalDB
+          - !Ref DBPassword
+          - "123"
         - Name: XL_METRICS_ENABLED
           Value: "false"
+        - Name: XL_LICENSE
+          Value: !If
+          - LicenseProvided
+          - !Ref License
+          - !Ref AWS::NoValue
         Hostname: xl-deploy
         MountPoints:
         - ContainerPath: "/opt/xebialabs/xl-deploy-server/repository"

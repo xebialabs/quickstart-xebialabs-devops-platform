@@ -59,6 +59,7 @@ Parameters:
   DBPassword:
     Description: The Postgres DB Password
     Type: String
+    NoEcho: True
   CreateDBLambdaFunction:
     Description: The Arn of the Create Database lambda function
     Type: String
@@ -66,39 +67,63 @@ Parameters:
     Description: The Linux mount point for the EFS volume
     Type: String
     MinLength: '1'
+  UseExternalDB:
+    Description: Use an external Database
+    AllowedValues:
+    - true
+    - false
+    Default: true
+    Type: String
+  ClusterMode:
+    Description: Set the clustermode for XL Release
+    AllowedValues:
+    - default
+    - hot-standby
+    - full
+    Default: default
+    Type: String
+  License:
+    Description: The (Base64 encoded) license for XL Release
+    Type: String
+    AllowedPattern: '[0-9A-Za-z=+/]*'
+    Default: trial
+
 # Mappings: 
 
 Conditions:
   ShouldLaunchECSEC2: !Equals [ !Ref LaunchType, 'ECS EC2' ]
   ShouldLaunchECSFargate: !Equals [ !Ref LaunchType, 'ECS Fargate' ]
   ShouldLaunchECSCluster: !Or [ Condition: ShouldLaunchECSEC2, Condition: ShouldLaunchECSFargate]
-
+  ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, 'true' ]
+  ShouldLaunchCluster: !Not [ !Equals [ !Ref ClusterMode, 'default' ] ]
+  LicenseProvided: !Not [ !Equals [ !Ref License, 'trial' ] ]
 Resources:
-  # CreateXLReleaseDatabase:
-  #   Type: Custom::CreateXLReleaseDatabase
-  #   Properties:
-  #     ServiceToken: !Ref CreateDBLambdaFunction
-  #     DBName: xl-release
-  #     DBHost: !Ref DBHost
-  #     DBUser: !Ref DBUser
-  #     DBPassword: !Ref DBPassword
-  # CreateXLReleaseArchiveDatabase:
-  #   Type: Custom::CreateXLReleaseArchiveDatabase
-  #   Properties:
-  #     ServiceToken: !Ref CreateDBLambdaFunction
-  #     DBName: xl-release-archive
-  #     DBHost: !Ref DBHost
-  #     DBUser: !Ref DBUser
-  #     DBPassword: !Ref DBPassword
+  CreateXLReleaseDatabase:
+    Type: Custom::CreateXLReleaseDatabase
+    Condition: ShouldUseExternalDB
+    Properties:
+      ServiceToken: !Ref CreateDBLambdaFunction
+      DBName: xlrelease
+      DBHost: !Ref DBHost
+      DBUser: !Ref DBUser
+      DBPassword: !Ref DBPassword
+  CreateXLReleaseArchiveDatabase:
+    Type: Custom::CreateXLReleaseArchiveDatabase
+    Condition: ShouldUseExternalDB
+    Properties:
+      ServiceToken: !Ref CreateDBLambdaFunction
+      DBName: xlrarchive
+      DBHost: !Ref DBHost
+      DBUser: !Ref DBUser
+      DBPassword: !Ref DBPassword
   XLReleaseECSService:
     Type: AWS::ECS::Service
-    # TODO Add , CreateXLReleaseArchiveDatabase, CreateXLReleaseDatabase
-    DependsOn: [ XLReleaseALBListener ]
+    DependsOn: [ XLReleaseALBListener, CreateXLReleaseArchiveDatabase, CreateXLReleaseDatabase ]
     Condition: ShouldLaunchECSCluster
     Properties:
       Cluster: !Ref ECSCluster
       Role: !Ref ECSServiceRole
-      DesiredCount: 2
+      DesiredCount: !If [ ShouldLaunchCluster, 2, 1 ]
       LaunchType: !If [ ShouldLaunchECSEC2, EC2, FARGATE ]
       PlacementConstraints:
         - Type: distinctInstance
@@ -126,27 +151,58 @@ Resources:
         Environment:
         - Name: ADMIN_PASSWORD
           Value: !Ref AdminPassword
+        - Name: XL_CLUSTER_MODE
+          Value: !Ref ClusterMode
         - Name: XL_DB_URL
-          Value: !Sub "jdbc:postgresql://${DBHost}/xl-release"
+          Value: !If
+          - ShouldUseExternalDB
+          - !Sub "jdbc:postgresql://${DBHost}/xlrelease"
+          - "jdbc:h2:file:/opt/xebialabs/xl-deploy-server/repository/xlrelease"
         - Name: XL_DB_USERNAME
-          Value: !Ref DBUser
+          Value: !If
+          - ShouldUseExternalDB
+          - !Ref DBUser
+          - sa
         - Name: XL_DB_PASSWORD
-          Value: !Ref DBPassword
+          Value: !If
+          - ShouldUseExternalDB
+          - !Ref DBPassword
+          - "123"
+        - Name: XL_REPORT_DB_URL
+          Value: !If
+          - ShouldUseExternalDB
+          - !Sub "jdbc:postgresql://${DBHost}/xlrarchive"
+          - "jdbc:h2:file:/opt/xebialabs/xl-deploy-server/repository/xlrarchive"
+        - Name: XL_REPORT_DB_USERNAME
+          Value: !If
+          - ShouldUseExternalDB
+          - !Ref DBUser
+          - sa
+        - Name: XL_REPORT_DB_PASSWORD
+          Value: !If
+          - ShouldUseExternalDB
+          - !Ref DBPassword
+          - "123"
         - Name: XL_METRICS_ENABLED
           Value: "false"
+        - Name: XL_LICENSE
+          Value: !If
+          - LicenseProvided
+          - !Ref License
+          - !Ref AWS::NoValue
         Hostname: xl-release
         MountPoints:
         - ContainerPath: "/opt/xebialabs/xl-release-server/repository"
-          SourceVolume: xl-deploy-repository-efs
+          SourceVolume: xl-release-repository-efs
         - ContainerPath: "/opt/xebialabs/xl-release-server/work"
-          SourceVolume: xl-deploy-work-efs
+          SourceVolume: xl-release-work-efs
       Volumes:
       - Host:
           SourcePath: !Sub "${MountPoint}/xl-release/repository"
-        Name: xl-deploy-repository-efs
+        Name: xl-release-repository-efs
       - Host:
           SourcePath: !Sub "${MountPoint}/xl-release/work"
-        Name: xl-deploy-work-efs
+        Name: xl-release-work-efs
   XLReleaseALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
