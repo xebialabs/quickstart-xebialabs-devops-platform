@@ -320,12 +320,11 @@ Resources:
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   XLReleaseApplication:
-  CreateDBLambda:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
     Properties:
       TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/xl-release.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         VPCID: !Ref VPCID
