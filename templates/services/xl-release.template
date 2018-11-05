@@ -62,6 +62,10 @@ Parameters:
   CreateDBLambdaFunction:
     Description: The Arn of the Create Database lambda function
     Type: String
+  MountPoint:
+    Description: The Linux mount point for the EFS volume
+    Type: String
+    MinLength: '1'
 # Mappings: 
 
 Conditions:
@@ -122,15 +126,27 @@ Resources:
         Environment:
         - Name: ADMIN_PASSWORD
           Value: !Ref AdminPassword
-        - Name: XL_DB_URL
-          Value: !Sub "jdbc:postgresql://${DBHost}/xl-release"
-        - Name: XL_DB_USERNAME
-          Value: !Ref DBUser
-        - Name: XL_DB_PASSWORD
-          Value: !Ref DBPassword
+        #- Name: XL_DB_URL
+        #  Value: !Sub "jdbc:postgresql://${DBHost}/xl-release"
+        #- Name: XL_DB_USERNAME
+        #  Value: !Ref DBUser
+        #- Name: XL_DB_PASSWORD
+        #  Value: !Ref DBPassword
         - Name: XL_METRICS_ENABLED
           Value: "false"
         Hostname: xl-release
+        MountPoints:
+        - ContainerPath: "/opt/xebialabs/xl-release-server/repository"
+          SourceVolume: xl-deploy-repository-efs
+        - ContainerPath: "/opt/xebialabs/xl-release-server/work"
+          SourceVolume: xl-deploy-work-efs
+      Volumes:
+      - Host:
+          SourcePath: !Sub "${MountPoint}/xl-release/repository"
+        Name: xl-deploy-repository-efs
+      - Host:
+          SourcePath: !Sub "${MountPoint}/xl-release/work"
+        Name: xl-deploy-work-efs
   XLReleaseALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:

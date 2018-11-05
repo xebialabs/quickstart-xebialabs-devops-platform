@@ -324,7 +324,7 @@ Resources:
     Condition: ShouldInstallXLRelease
     Properties:
       TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/xl-release.template
+      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-release.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
         VPCID: !Ref VPCID
@@ -341,6 +341,7 @@ Resources:
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
         CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
+        MountPoint: !Ref MountPoint
   XLDeployApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
@@ -363,4 +364,5 @@ Resources:
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
         CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
+        MountPoint: !Ref MountPoint
 # Outputs:

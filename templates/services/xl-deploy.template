@@ -62,12 +62,10 @@ Parameters:
   CreateDBLambdaFunction:
     Description: The Arn of the Create Database lambda function
     Type: String
-
   MountPoint:
     Description: The Linux mount point for the EFS volume
     Type: String
     MinLength: '1'
-    Default: /mnt/efs
 # Mappings:
 
 Conditions:
@@ -122,22 +120,28 @@ Resources:
           Value: !Ref AdminPassword
         - Name: XL_CLUSTER_MODE
           Value: default
-        - Name: XL_DB_URL
-          Value: !Sub "jdbc:postgresql://${DBHost}/XLDevOpsPlatformDB"
-        - Name: XL_DB_USERNAME
-          Value: !Ref DBUser
-        - Name: XL_DB_PASSWORD
-          Value: !Ref DBPassword
+        #- Name: XL_DB_URL
+        #  Value: !Sub "jdbc:postgresql://${DBHost}/XLDevOpsPlatformDB"
+        #- Name: XL_DB_USERNAME
+        #  Value: !Ref DBUser
+        #- Name: XL_DB_PASSWORD
+        #  Value: !Ref DBPassword
         - Name: XL_METRICS_ENABLED
           Value: "false"
+        Hostname: xl-deploy
         MountPoints:
-        - ContainerPath: "/opt/xebialabs/xl-deploy/work"
+        - ContainerPath: "/opt/xebialabs/xl-deploy-server/repository"
+          SourceVolume: xl-deploy-repository-efs
+        - ContainerPath: "/opt/xebialabs/xl-deploy-server/work"
           SourceVolume: xl-deploy-work-efs
       Volumes:
       - Host:
-          SourcePath: !Sub "${MountPoint}/xl-deploy"
+          SourcePath: !Sub "${MountPoint}/xl-deploy/repository"
+        Name: xl-deploy-repository-efs
+      - Host:
+          SourcePath: !Sub "${MountPoint}/xl-deploy/work"
         Name: xl-deploy-work-efs
-      Hostname: xl-deploy
+
   XLDeployALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
