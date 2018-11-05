@@ -120,12 +120,12 @@ Resources:
           Value: !Ref AdminPassword
         - Name: XL_CLUSTER_MODE
           Value: default
-        #- Name: XL_DB_URL
-        #  Value: !Sub "jdbc:postgresql://${DBHost}/XLDevOpsPlatformDB"
-        #- Name: XL_DB_USERNAME
-        #  Value: !Ref DBUser
-        #- Name: XL_DB_PASSWORD
-        #  Value: !Ref DBPassword
+        - Name: XL_DB_URL
+          Value: !Sub "jdbc:postgresql://${DBHost}/XLDevOpsPlatformDB"
+        - Name: XL_DB_USERNAME
+          Value: !Ref DBUser
+        - Name: XL_DB_PASSWORD
+          Value: !Ref DBPassword
         - Name: XL_METRICS_ENABLED
           Value: "false"
         Hostname: xl-deploy
