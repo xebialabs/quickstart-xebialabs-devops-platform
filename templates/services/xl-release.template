@@ -126,12 +126,12 @@ Resources:
         Environment:
         - Name: ADMIN_PASSWORD
           Value: !Ref AdminPassword
-        #- Name: XL_DB_URL
-        #  Value: !Sub "jdbc:postgresql://${DBHost}/xl-release"
-        #- Name: XL_DB_USERNAME
-        #  Value: !Ref DBUser
-        #- Name: XL_DB_PASSWORD
-        #  Value: !Ref DBPassword
+        - Name: XL_DB_URL
+          Value: !Sub "jdbc:postgresql://${DBHost}/xl-release"
+        - Name: XL_DB_USERNAME
+          Value: !Ref DBUser
+        - Name: XL_DB_PASSWORD
+          Value: !Ref DBPassword
         - Name: XL_METRICS_ENABLED
           Value: "false"
         Hostname: xl-release
