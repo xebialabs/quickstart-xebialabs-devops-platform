@@ -130,6 +130,7 @@ Resources:
           Value: !Ref DBPassword
         - Name: XL_METRICS_ENABLED
           Value: "false"
+        Hostname: xl-deploy
         MountPoints:
         - ContainerPath: "/opt/xebialabs/xl-deploy/work"
           SourceVolume: xl-deploy-work-efs
@@ -137,7 +138,6 @@ Resources:
       - Host:
           SourcePath: !Sub "${MountPoint}/xl-deploy"
         Name: xl-deploy-work-efs
-      Hostname: xl-deploy
   XLDeployALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
