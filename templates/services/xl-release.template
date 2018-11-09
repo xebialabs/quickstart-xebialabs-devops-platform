@@ -87,6 +87,10 @@ Parameters:
     Type: String
     AllowedPattern: '[0-9A-Za-z=+/]*'
     Default: trial
+  SslCertificateArn:
+    Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
+    Type: String
+    Default: ':default'
 
 # Mappings: 
 
@@ -97,6 +101,7 @@ Conditions:
   ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, 'true' ]
   ShouldLaunchCluster: !Not [ !Equals [ !Ref ClusterMode, 'default' ] ]
   LicenseProvided: !Not [ !Equals [ !Ref License, 'trial' ] ]
+  SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
 Resources:
   CreateXLReleaseDatabase:
     Type: Custom::CreateXLReleaseDatabase
@@ -208,7 +213,9 @@ Resources:
     Properties:
       LoadBalancerArn: !Ref LoadBalancer
       Port: !Ref Port
-      Protocol: HTTP
+      Protocol: !If [ SslCertificateProvided, HTTPS, HTTP ]
+      Certificates:
+      - !If [ SslCertificateProvided, { CertificateArn: !Ref SslCertificateArn }, !Ref 'AWS::NoValue' ]
       DefaultActions:
       - Type: forward
         TargetGroupArn: !Ref XLReleaseTargetGroup

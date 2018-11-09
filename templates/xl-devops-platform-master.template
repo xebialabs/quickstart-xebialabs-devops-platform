@@ -21,25 +21,29 @@ Metadata:
       - XLReleaseClusterMode
       - XLReleaseLicense
     - Label:
+        default: HTTP Configuration
+      Parameters:
+      - SslCertificateArn
+    - Label:
         default: VPC Network Configuration
       Parameters:
-        - RemoteAccessCIDR
-        - AvailabilityZones
-        - VPCCIDR
-        - PrivateSubnet1CIDR
-        - PrivateSubnet2CIDR
-        - DataSubnet1CIDR
-        - DataSubnet2CIDR
-        - PublicSubnet1CIDR
-        - PublicSubnet2CIDR
+      - RemoteAccessCIDR
+      - AvailabilityZones
+      - VPCCIDR
+      - PrivateSubnet1CIDR
+      - PrivateSubnet2CIDR
+      - DataSubnet1CIDR
+      - DataSubnet2CIDR
+      - PublicSubnet1CIDR
+      - PublicSubnet2CIDR
     - Label:
         default: RDS Configuration
       Parameters:
-        - DBMasterUsername
-        - DBMasterPassword
-        # - AuroraRDSSecurityGroup
-        - DBBackupRetentionPeriod
-        - DBInstanceClass
+      - DBMasterUsername
+      - DBMasterPassword
+      # - AuroraRDSSecurityGroup
+      - DBBackupRetentionPeriod
+      - DBInstanceClass
     - Label:
         default: General Settings
       Parameters:
@@ -77,6 +81,8 @@ Metadata:
         default: XL Deploy license
       XLReleaseLicense:
         default: XL Release license
+      SslCertificateArn:
+        default: SSL Certificate Arn
       EnvironmentName:
         deault: Environment name
       VPCCIDR:
@@ -157,6 +163,10 @@ Parameters:
     AllowedValues: 
     - true
     - false
+  SslCertificateArn:
+    Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
+    Type: String
+    Default: ':default'
   EnvironmentName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     Description: The Environment name, defaults to the stack name.
@@ -291,8 +301,6 @@ Parameters:
 
 Conditions: 
   GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
-  XLDeployLicenseProvided: !Not [ !Equals [ !Ref XLDeployLicense, 'trial' ] ]
-  XLReleaseLicenseProvided: !Not [ !Equals [ !Ref XLReleaseLicense, 'trial' ] ]
 Resources: 
   VPCStack:
     Type: AWS::CloudFormation::Stack
@@ -364,7 +372,9 @@ Resources:
         VPCCIDR: !Ref VPCCIDR
         XLReleaseClusterMode: !Ref XLReleaseClusterMode
         XLDeployClusterMode: !Ref XLDeployClusterMode
-        XLReleaseLicense: !If [ XLReleaseLicenseProvided, !Ref XLReleaseLicense, !Ref "AWS::NoValue" ]
-        XLDeployLicense: !If [ XLDeployLicenseProvided, !Ref XLDeployLicense, !Ref "AWS::NoValue" ]
+        XLReleaseLicense: !Ref XLReleaseLicense
+        XLDeployLicense: !Ref XLDeployLicense
+        SslCertificateArn: !Ref SslCertificateArn
+
 # Outputs:
 ...

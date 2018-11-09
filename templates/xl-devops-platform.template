@@ -20,6 +20,10 @@ Metadata:
       - XLDeployClusterMode
       - XLDeployLicense
     - Label:
+        default: HTTP Configuration
+      Parameters:
+      - SslCertificateArn
+    - Label:
         default: VPC Network Configuration
       Parameters:
         - VPCID
@@ -76,6 +80,8 @@ Metadata:
         default: XL Deploy license
       XLReleaseLicense:
         default: XL Release license
+      SslCertificateArn:
+        default: SSL Certificate Arn
       EnvironmentName:
         deault: Environment name
       PublicSubnet1ID:
@@ -152,6 +158,10 @@ Parameters:
     AllowedValues: 
     - true
     - false
+  SslCertificateArn:
+    Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
+    Type: String
+    Default: ':default'
   EnvironmentName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     Description: The Environment name, defaults to the stack name.
@@ -290,8 +300,6 @@ Conditions:
   ShouldInstallAll: !And [ Condition: ShouldInstallXLDeploy, Condition: ShouldInstallXLRelease ]
   EnvironmentNameSet: !Not [ !Equals [ !Ref EnvironmentName, "" ]]
   ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, true ]
-  XLDeployLicenseProvided: !Not [ !Equals [ !Ref XLDeployLicense, 'trial' ] ]
-  XLReleaseLicenseProvided: !Not [ !Equals [ !Ref XLReleaseLicense, 'trial' ] ]
 Resources:
   SecurityGroupsStack:
     Type: AWS::CloudFormation::Stack
@@ -391,7 +399,7 @@ Resources:
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLReleaseClusterMode
         UseExternalDB: !Ref UseExternalDB
-        License: !If [ XLReleaseLicenseProvided, !Ref XLReleaseLicense, !Ref "AWS::NoValue" ]
+        License: !Ref XLReleaseLicense
   XLDeployApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
@@ -417,5 +425,5 @@ Resources:
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLDeployClusterMode
         UseExternalDB: !Ref UseExternalDB
-        License: !If [ XLDeployLicenseProvided, !Ref XLDeployLicense, !Ref "AWS::NoValue" ]
+        License: !Ref XLDeployLicense
 # Outputs:
