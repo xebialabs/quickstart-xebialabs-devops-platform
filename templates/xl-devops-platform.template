@@ -300,6 +300,7 @@ Conditions:
   ShouldInstallAll: !And [ Condition: ShouldInstallXLDeploy, Condition: ShouldInstallXLRelease ]
   EnvironmentNameSet: !Not [ !Equals [ !Ref EnvironmentName, "" ]]
   ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, true ]
+  SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
 Resources:
   SecurityGroupsStack:
     Type: AWS::CloudFormation::Stack
@@ -426,4 +427,26 @@ Resources:
         ClusterMode: !Ref XLDeployClusterMode
         UseExternalDB: !Ref UseExternalDB
         License: !Ref XLDeployLicense
-# Outputs:
+Outputs:
+  XLDeployURL:
+    Description: The URL where XL Deploy is reachable
+    Value: !Join
+    - ''
+    - -  !If
+        - SslCertificateProvided
+        - https
+        - http
+      -  '://'
+      - !GetAtt LoadBalancerStack.Outputs.LoadBalancerUrl
+      - ':4516/'
+  XLReleaseURL:
+    Description: The URL where XL Release is reachable
+    Value: !Join
+    - ''
+    - -  !If
+        - SslCertificateProvided
+        - https
+        - http
+      -  '://'
+      - !GetAtt LoadBalancerStack.Outputs.LoadBalancerUrl
+      - ':5516/'

@@ -376,5 +376,11 @@ Resources:
         XLDeployLicense: !Ref XLDeployLicense
         SslCertificateArn: !Ref SslCertificateArn
 
-# Outputs:
+Outputs:
+  XLDeployURL:
+    Description: The URL where XL Deploy is reachable
+    Value: !GetAtt XLDevOpsPlatformStack.Outputs.XLDeployURL
+  XLReleaseURL:
+    Description: The URL where XL Release is reachable
+    Value: !GetAtt XLDevOpsPlatformStack.Outputs.XLReleaseURL
 ...
