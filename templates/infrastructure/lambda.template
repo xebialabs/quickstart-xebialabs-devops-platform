@@ -175,7 +175,7 @@ Resources:
         SubnetIds: !Ref AuroraSubnets
       Code:
         S3Bucket: !Ref LambdaZipsBucket
-        S3Key: !Sub "${QSS3KeyPrefix}lambdas/create-db.zip"
+        S3Key: !Sub "${QSS3KeyPrefix}functions/packages/create-db/lambda.zip"
 Outputs:
   CreateDbLambdaArn:
     Description: The ARN of the created Lambda function
