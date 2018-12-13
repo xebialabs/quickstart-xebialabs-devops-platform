@@ -45,7 +45,6 @@ Parameters:
     Description: The database admin account username
     MaxLength: '16'
     MinLength: '1'
-    NoEcho: 'true'
     Type: String
   DBMasterPassword:
     AllowedPattern: "(?=\\S)[^@/\"\\r\\n\\t\\f\\s]*"
@@ -53,7 +52,7 @@ Parameters:
     Description: The database admin account password
     MaxLength: '41'
     MinLength: '8'
-    NoEcho: 'True'
+    NoEcho: True
     Type: String
   DBMultiAZ:
     AllowedValues:
