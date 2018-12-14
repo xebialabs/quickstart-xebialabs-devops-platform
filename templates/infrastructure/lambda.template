@@ -30,7 +30,7 @@ Resources:
       SourceBucket: !Ref QSS3BucketName
       Prefix: !Ref QSS3KeyPrefix
       Objects:
-        - lambdas/create-db.zip
+        - functions/packages/create-db/lambda.zip
   CopyZipsRole:
     Type: AWS::IAM::Role
     Properties:

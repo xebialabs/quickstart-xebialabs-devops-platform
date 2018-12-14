@@ -12,7 +12,7 @@ Metadata:
       - XLDeployDockerImage
       - XLDeployVersion
       - XLDeployPassword
-      - XLDeployClusterMode
+      - XLDeployClusterMode 
       - XLDeployLicense
       - InstallXLRelease
       - XLReleaseDockerImage
@@ -84,7 +84,7 @@ Metadata:
       SslCertificateArn:
         default: SSL Certificate Arn
       EnvironmentName:
-        deault: Environment name
+        default: Environment name
       VPCCIDR:
         default: VPC CIDR
       AvailabilityZones:
@@ -168,9 +168,10 @@ Parameters:
     Type: String
     Default: ':default'
   EnvironmentName:
-    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    Description: The Environment name, defaults to the stack name.
+    AllowedPattern: ^[0-9a-zA-Z]+(-*[0-9a-zA-Z]+)*$
+    Description: The Environment name, defaults to 'xldevops'.
     Type: String
+    Default: 'xldevops'
   VPCCIDR:
     Description: CIDR block for the VPC
     Type: String

@@ -163,9 +163,10 @@ Parameters:
     Type: String
     Default: ':default'
   EnvironmentName:
-    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    Description: The Environment name, defaults to the stack name.
+    AllowedPattern: ^[0-9a-zA-Z]+(-*[0-9a-zA-Z]+)*$
+    Description: The Environment name, defaults to 'xldevops'
     Type: String
+    Default: 'xldevops'
   KeyPairName:
     Description: The name of an existing public/private key pair, which allows you to securely connect to your instance after it launches
     Type: AWS::EC2::KeyPair::KeyName
@@ -297,7 +298,6 @@ Conditions:
   ShouldInstallXLDeploy: !Equals [ !Ref InstallXLDeploy, True ]
   ShouldInstallXLRelease: !Equals [ !Ref InstallXLRelease, True ]
   ShouldInstallAll: !And [ Condition: ShouldInstallXLDeploy, Condition: ShouldInstallXLRelease ]
-  EnvironmentNameSet: !Not [ !Equals [ !Ref EnvironmentName, "" ]]
   ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, true ]
   SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
 Resources:
@@ -308,7 +308,7 @@ Resources:
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/securitygroups.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        EnvironmentName: !If [ EnvironmentNameSet, !Ref EnvironmentName, !Ref "AWS::StackName" ]
+        EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         BastionSecurityGroup: !Ref BastionSecurityGroup
   EFSStack:
@@ -318,7 +318,7 @@ Resources:
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/efs.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        EnvironmentName: !If [ EnvironmentNameSet, !Ref EnvironmentName, !Ref "AWS::StackName" ]
+        EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         VPCCIDR: !Ref VPCCIDR
         Subnets: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
@@ -329,7 +329,7 @@ Resources:
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/ecs.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        EnvironmentName: !If [ EnvironmentNameSet, !Ref EnvironmentName, !Ref "AWS::StackName" ]
+        EnvironmentName: !Ref EnvironmentName
         Subnets: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
         InstanceType: !Ref XLPlatformInstanceType
         ClusterSize: !If [ ShouldInstallAll, 4, 2 ]
@@ -344,7 +344,7 @@ Resources:
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/alb.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        EnvironmentName: !If [ EnvironmentNameSet, !Ref EnvironmentName, !Ref "AWS::StackName" ]
+        EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         Subnets: !Join [ ',', [ !Ref PublicSubnet1ID, !Ref PublicSubnet2ID ]]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
