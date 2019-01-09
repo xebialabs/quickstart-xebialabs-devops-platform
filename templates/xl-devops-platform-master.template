@@ -25,7 +25,7 @@ Metadata:
       Parameters:
       - SslCertificateArn
     - Label:
-        default: VPC Network Configuration
+        default: Network Configuration
       Parameters:
       - RemoteAccessCIDR
       - AvailabilityZones
@@ -41,7 +41,6 @@ Metadata:
       Parameters:
       - DBMasterUsername
       - DBMasterPassword
-      # - AuroraRDSSecurityGroup
       - DBBackupRetentionPeriod
       - DBInstanceClass
     - Label:
@@ -109,8 +108,6 @@ Metadata:
         default: Database administrator username
       DBMasterPassword:
         default: Database administrator password
-      # AuroraRDSSecurityGroup:
-      #   default: Amazon Aurora Security Group
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
@@ -237,9 +234,6 @@ Parameters:
     Default: quickstart-xebialabs-devops-platform/
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
     Type: String
-  # AuroraRDSSecurityGroup:
-  #   Description: Aurora Security Group
-  #   Type: 'AWS::EC2::SecurityGroup::Id'
   DBMasterUsername:
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     ConstraintDescription: must begin with a letter and contain only alphanumeric characters.

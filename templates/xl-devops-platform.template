@@ -24,7 +24,7 @@ Metadata:
       Parameters:
       - SslCertificateArn
     - Label:
-        default: VPC Network Configuration
+        default: Network Configuration
       Parameters:
         - VPCID
         - RemoteAccessCIDR
@@ -39,7 +39,6 @@ Metadata:
       Parameters:
         - DBMasterUsername
         - DBMasterPassword
-        # - AuroraRDSSecurityGroup
         - DBBackupRetentionPeriod
         - DBInstanceClass
     - Label:
@@ -100,8 +99,6 @@ Metadata:
         default: Database administrator username
       DBMasterPassword:
         default: Database administrator password
-      # AuroraRDSSecurityGroup:
-      #   default: Amazon Aurora Security Group
       KeyPairName:
         default: Key name
       BastionSecurityGroup:
