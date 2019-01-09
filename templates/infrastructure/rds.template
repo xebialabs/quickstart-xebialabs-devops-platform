@@ -1,6 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: ---
+Description: >
+  Sub template that creates an Aurora PostgreSQL cluster.
 Parameters: 
   Subnets:
     Description: The subnets the Aurora cluster should be deployed to

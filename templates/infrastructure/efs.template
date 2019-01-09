@@ -1,5 +1,5 @@
 Description: >
-  This template deploys an EFS tfile system that can be used from  ECS services for persistent data.
+  This template deploys an EFS file system that can be used from ECS services for persistent data.
 
 Parameters:
   EnvironmentName:

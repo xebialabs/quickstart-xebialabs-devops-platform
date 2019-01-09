@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: ---
+Description: >
+  Sub template that creates a Lambda function that can create databases in a provisioned Aurora PostgreSQL cluster.
 Parameters: 
   AuroraRDSSecurityGroup:
     Description: Aurora Security Group

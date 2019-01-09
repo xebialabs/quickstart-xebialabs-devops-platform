@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: ---
+Description: >
+  Sub template that installs XL Deploy as docker containers in the provisioned ECS cluster.
 # Metadata: 
 
 Parameters:
