@@ -329,7 +329,9 @@ Resources:
         EnvironmentName: !Ref EnvironmentName
         Subnets: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
         InstanceType: !Ref XLPlatformInstanceType
-        ClusterSize: !If [ ShouldInstallAll, 4, 2 ]
+        DesiredClusterSize: !If [ ShouldInstallAll, 4, 2 ]
+        MinimumClusterSize: !If [ ShouldInstallAll, 4, 2 ]
+        MaximumClusterSize: !If [ ShouldInstallAll, 4, 2 ]
         ECSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.ECSHostSecurityGroup
         KeyPairName: !Ref KeyPairName
         MountPoint: !Ref MountPoint

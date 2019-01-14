@@ -16,10 +16,21 @@ Parameters:
     Type: String
     Default: m5.large
 
-  ClusterSize:
+  MinimumClusterSize:
+    Description: How many ECS hosts need to be deployed minimally?
+    Type: Number
+    Default: 4
+  
+  DesiredClusterSize:
     Description: How many ECS hosts do you want to initially deploy?
     Type: Number
     Default: 4
+
+  MaximumClusterSize:
+    Description: How many ECS hosts need to be deployed maximally?
+    Type: Number
+    Default: 4
+  
 
   Subnets:
     Description: The private subnets this ECS cluster should be deployed to
@@ -57,9 +68,9 @@ Resources:
     Properties:
       VPCZoneIdentifier: !Ref Subnets
       LaunchConfigurationName: !Ref ECSLaunchConfiguration
-      MinSize: !Ref ClusterSize
-      MaxSize: !Ref ClusterSize
-      DesiredCapacity: !Ref ClusterSize
+      MinSize: !Ref MinimumClusterSize
+      MaxSize: !Ref MaximumClusterSize
+      DesiredCapacity: !Ref DesiredClusterSize
       Tags:
       - Key: Name
         Value: !Sub ${EnvironmentName} ECS host
