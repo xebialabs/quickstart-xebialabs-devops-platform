@@ -356,18 +356,9 @@ Resources:
             - s3
       Parameters:
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
-        VPCID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - VPCID
-        PublicSubnet1ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PublicSubnet1ID
-        PublicSubnet2ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PublicSubnet2ID
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
+        PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+        PublicSubnet2ID: !GetAtt VPCStack.Outputs.PublicSubnet2ID
         QSS3BucketName: !Ref QSS3BucketName
         BastionInstanceType: t2.small
         BastionAMIOS: Amazon-Linux-HVM
@@ -388,35 +379,14 @@ Resources:
             - s3
       Parameters:
         EnvironmentName: !Ref EnvironmentName
-        VPCID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - VPCID
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
-        PublicSubnet1ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PublicSubnet1ID
-        PublicSubnet2ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PublicSubnet2ID
-        PrivateSubnet1ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PrivateSubnet1AID
-        PrivateSubnet2ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PrivateSubnet2AID
-        DataSubnet1ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PrivateSubnet1BID
-        DataSubnet2ID: !GetAtt 
-          - VPCStack
-          - Outputs
-          - PrivateSubnet2BID
+        PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+        PublicSubnet2ID: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+        PrivateSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
+        PrivateSubnet2ID: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
+        DataSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1BID
+        DataSubnet2ID: !GetAtt VPCStack.Outputs.PrivateSubnet2BID
         KeyPairName: !Ref KeyPairName
         XLPlatformInstanceType: !Ref XLPlatformInstanceType
         InstallXLDeploy: !Ref InstallXLDeploy
@@ -433,10 +403,7 @@ Resources:
         DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        BastionSecurityGroup: !GetAtt 
-          - LinuxBastionStack
-          - Outputs
-          - BastionSecurityGroupID
+        BastionSecurityGroup: !GetAtt LinuxBastionStack.Outputs.BastionSecurityGroupID
         VPCCIDR: !Ref VPCCIDR
         XLReleaseClusterMode: !Ref XLReleaseClusterMode
         XLDeployClusterMode: !Ref XLDeployClusterMode
@@ -446,13 +413,7 @@ Resources:
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable
-    Value: !GetAtt 
-      - XLDevOpsPlatformStack
-      - Outputs
-      - XLDeployURL
+    Value: !GetAtt XLDevOpsPlatformStack.Outputs.XLDeployURL
   XLReleaseURL:
     Description: The URL where XL Release is reachable
-    Value: !GetAtt 
-      - XLDevOpsPlatformStack
-      - Outputs
-      - XLReleaseURL
+    Value: !GetAtt XLDevOpsPlatformStack.Outputs.XLReleaseURL
