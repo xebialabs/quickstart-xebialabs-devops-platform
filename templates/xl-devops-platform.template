@@ -8,6 +8,7 @@ Metadata:
         default: Network Configuration
       Parameters:
         - VPCID
+        - VPCCIDR
         - RemoteAccessCIDR
         - PublicSubnet1ID
         - PublicSubnet2ID
@@ -32,6 +33,7 @@ Metadata:
       - EnvironmentName
       - KeyPairName
       - BastionSecurityGroup
+      - UseExternalDB
     - Label:
         default: XebiaLabs DevOps Platform Configuration
       Parameters:
@@ -48,6 +50,7 @@ Metadata:
       - XLDeployPassword
       - XLDeployClusterMode
       - XLDeployLicense
+      - MountPoint
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
@@ -114,8 +117,14 @@ Metadata:
         default: Quick Start S3 key prefix
       VPCID:
         default: VPC ID
+      VPCCIDR:
+        default: VPC CIDR
       RemoteAccessCIDR:
         default: Remote access CIDR
+      MountPoint:
+        default: EFS mount point
+      UseExternalDB:
+        default: User external database?
 Parameters: 
   XLPlatformInstanceType:
     AllowedValues:
