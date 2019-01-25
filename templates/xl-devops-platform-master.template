@@ -7,26 +7,6 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: XebiaLabs DevOps Platform Configuration
-        Parameters:
-          - XLPlatformInstanceType
-          - InstallXLDeploy
-          - XLDeployDockerImage
-          - XLDeployVersion
-          - XLDeployPassword
-          - XLDeployClusterMode
-          - XLDeployLicense
-          - InstallXLRelease
-          - XLReleaseDockerImage
-          - XLReleaseVersion
-          - XLReleasePassword
-          - XLReleaseClusterMode
-          - XLReleaseLicense
-      - Label:
-          default: HTTP Configuration
-        Parameters:
-          - SslCertificateArn
-      - Label:
           default: Network Configuration
         Parameters:
           - RemoteAccessCIDR
@@ -46,10 +26,30 @@ Metadata:
           - DBBackupRetentionPeriod
           - DBInstanceClass
       - Label:
+          default: HTTP Configuration
+        Parameters:
+          - SslCertificateArn
+      - Label:
           default: General Settings
         Parameters:
           - EnvironmentName
           - KeyPairName
+      - Label:
+          default: XebiaLabs DevOps Platform Configuration
+        Parameters:
+          - XLPlatformInstanceType
+          - InstallXLDeploy
+          - XLDeployDockerImage
+          - XLDeployVersion
+          - XLDeployPassword
+          - XLDeployClusterMode
+          - XLDeployLicense
+          - InstallXLRelease
+          - XLReleaseDockerImage
+          - XLReleaseVersion
+          - XLReleasePassword
+          - XLReleaseClusterMode
+          - XLReleaseLicense
       - Label:
           default: AWS Quick Start Configuration
         Parameters:
@@ -57,7 +57,7 @@ Metadata:
           - QSS3KeyPrefix
     ParameterLabels:
       XLPlatformInstanceType:
-        default: XL DevOps Platform Instance Type
+        default: XL DevOps Platform instance type
       XLDeployDockerImage:
         default: XL Deploy Docker image
       XLReleaseDockerImage:
@@ -75,35 +75,39 @@ Metadata:
       InstallXLDeploy:
         default: Install XL Deploy
       XLDeployClusterMode:
-        default: XL Deploy Cluster mode
+        default: XL Deploy cluster mode
       XLReleaseClusterMode:
-        default: XL Release Cluster mode
+        default: XL Release cluster mode
       XLDeployLicense:
         default: XL Deploy license
       XLReleaseLicense:
         default: XL Release license
       SslCertificateArn:
-        default: SSL Certificate Arn
+        default: SSL certificate arn
       EnvironmentName:
         default: Environment name
       VPCCIDR:
         default: VPC CIDR
       AvailabilityZones:
-        default: Availability Zones
+        default: Availability zones
       RemoteAccessCIDR:
         default: Remote access CIDR
       PublicSubnet1CIDR:
-        default: Public Subnet 1
+        default: Public subnet 1
       PublicSubnet2CIDR:
-        default: Public Subnet 2
+        default: Public subnet 2
       PrivateSubnet1CIDR:
-        default: Private Subnet 1
+        default: Private subnet 1
       PrivateSubnet2CIDR:
-        default: Private Subnet 2
+        default: Private subnet 2
       DataSubnet1CIDR:
-        default: Private Data Subnet 1
+        default: Private data subnet 1
       DataSubnet2CIDR:
-        default: Private Data Subnet 2
+        default: Private data subnet 2
+      DBBackupRetentionPeriod:
+        default: Database backup retention period
+      DBInstanceClass:
+        default: Database instance class
       KeyPairName:
         default: Key name
       DBMasterUsername:
@@ -111,9 +115,9 @@ Metadata:
       DBMasterPassword:
         default: Database administrator password
       QSS3BucketName:
-        default: Quick Start S3 Bucket Name
+        default: Quick Start S3 bucket name
       QSS3KeyPrefix:
-        default: Quick Start S3 Key Prefix
+        default: Quick Start S3 key prefix
 Parameters:
   XLPlatformInstanceType:
     AllowedValues:
@@ -136,7 +140,7 @@ Parameters:
     Type: String
     NoEcho: true
   XLReleasePassword:
-    Description: The administrator password for XL Deploy
+    Description: The administrator password for XL Release
     MinLength: 8
     Type: String
     NoEcho: true
