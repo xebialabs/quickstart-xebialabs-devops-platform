@@ -2,8 +2,7 @@
 ## XebiaLabs DevOps Platform on AWS
 
 ### License
-This Quick Start is distributed under the Apache 2.0 license, version 2.
-This Quick Start uses "psycopg2" library, which is under GPL 3.0 and LGPL 3.0 license.
+This Quick Start is distributed under the Apache License, Version 2.0. This Quick Start uses "psycopg2" library, which is provided under the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 ### Overview
 This Quick Start automatically deploys the XebiaLabs DevOps Platform into a new or existing virtual private cloud (VPC) on the Amazon Web Services (AWS) Cloud in about 40 minutes. The Quick Start includes AWS CloudFormation templates and a deployment guide with step-by-step instructions.
