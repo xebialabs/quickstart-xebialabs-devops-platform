@@ -2,7 +2,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >
   This template will setup the XebiaLabs DevOps Platform in a newly created VPC.
-  It will also create the Bastion Hosts to access the VPC.
+  It will also create the Bastion Hosts to access the VPC. (qs-1paeiji6j)
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
