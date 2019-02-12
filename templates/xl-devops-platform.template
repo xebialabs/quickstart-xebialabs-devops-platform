@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: This template will install the XebiaLabs DevOps Platform in an existing VPC. (qp-1orspsf81)
+Description: This template will install the XebiaLabs DevOps Platform in an existing VPC. (qs-1paeiji4m)
 Metadata: 
   AWS::CloudFormation::Interface:
     ParameterGroups:
