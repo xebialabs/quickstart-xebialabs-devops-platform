@@ -92,6 +92,10 @@ Parameters:
     Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
     Type: String
     Default: ':default'
+  AcceptEula:
+    Description: Do you accept the XebiaLabs EULA (Allowed value 'yes')
+    Type: String
+    AllowedPattern: '^yes$'
 
 # Mappings: 
 
@@ -103,6 +107,7 @@ Conditions:
   ShouldLaunchCluster: !Not [ !Equals [ !Ref ClusterMode, 'default' ] ]
   LicenseProvided: !Not [ !Equals [ !Ref License, 'trial' ] ]
   SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
+  EulaAccepted: !Equals [ !Ref AcceptEula, 'yes' ]
 Resources:
   CreateXLReleaseDatabase:
     Type: Custom::CreateXLReleaseDatabase
@@ -196,6 +201,11 @@ Resources:
           - LicenseProvided
           - !Ref License
           - !Ref AWS::NoValue
+        - Name: ACCEPT_EULA
+          Value: !If
+          - EulaAccepted
+          - 'Y'
+          - 'N'
         Hostname: xl-release
         MountPoints:
         - ContainerPath: "/opt/xebialabs/xl-release-server/repository"
