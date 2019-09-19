@@ -29,6 +29,7 @@ Metadata:
           default: HTTP Configuration
         Parameters:
           - SslCertificateArn
+          - LoadBalancerType
       - Label:
           default: General Settings
         Parameters:
@@ -84,6 +85,8 @@ Metadata:
         default: XL Release license
       SslCertificateArn:
         default: SSL certificate arn
+      LoadBalancerType: 
+        default: The type of load balancer to deploy (either internal or public)
       EnvironmentName:
         default: Environment name
       VPCCIDR:
@@ -172,6 +175,13 @@ Parameters:
       XebiaLabs DevOps Platform
     Type: String
     Default: ':default'
+  LoadBalancerType:
+    Default: 'internet-facing'
+    Description: 'The type of load balancer to deploy (either internal or public)'
+    Type: String
+    AllowedValues:
+      - 'internal'
+      - 'internet-facing'
   EnvironmentName:
     AllowedPattern: '^[0-9a-zA-Z]+(-*[0-9a-zA-Z]+)*$'
     Description: 'The Environment name, defaults to ''xldevops''.'
@@ -414,6 +424,7 @@ Resources:
         XLReleaseLicense: !Ref XLReleaseLicense
         XLDeployLicense: !Ref XLDeployLicense
         SslCertificateArn: !Ref SslCertificateArn
+        LoadBalancerType: !Ref LoadBalancerType
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable
