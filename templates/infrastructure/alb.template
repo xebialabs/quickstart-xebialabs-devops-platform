@@ -19,13 +19,21 @@ Parameters:
     Description: Select the Security Group to apply to the Application Load Balancer
     Type: AWS::EC2::SecurityGroup::Id
 
-Resources:
+  LoadBalancerType:
+    Default: 'internet-facing'
+    Description: 'The type of load balancer to deploy (either internal or public)'
+    Type: String
+    AllowedValues:
+      - 'internal'
+      - 'internet-facing'
 
+Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: !Ref EnvironmentName
-      Scheme: internet-facing
+      Scheme: !Ref LoadBalancerType
+      IpAddressType: ipv4
       LoadBalancerAttributes:
       - Key: idle_timeout.timeout_seconds
         Value: '30'

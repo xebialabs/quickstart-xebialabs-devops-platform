@@ -302,6 +302,13 @@ Parameters:
     Type: String
     AllowedPattern: '[0-9A-Za-z=+/]*'
     Default: trial
+  LoadBalancerType:
+    Default: 'internet-facing'
+    Description: 'The type of load balancer to deploy (either internal or public)'
+    Type: String
+    AllowedValues:
+      - 'internal'
+      - 'internet-facing'
 # Mappings:
 
 Conditions: 
@@ -361,6 +368,7 @@ Resources:
         VPCID: !Ref VPCID
         Subnets: !Join [ ',', [ !Ref PublicSubnet1ID, !Ref PublicSubnet2ID ]]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
+        LoadBalancerType: !Ref LoadBalancerType
 
   RDSStack:
     Type: AWS::CloudFormation::Stack
