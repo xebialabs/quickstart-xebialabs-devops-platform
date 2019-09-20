@@ -187,7 +187,8 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   BastionSecurityGroup:
     Description: The Bastion Security Group that allows SSH access to the ECS machines
-    Type: AWS::EC2::SecurityGroup::Id
+    Type: String
+    Default: ''
   VPCID:
     Description: The VPC Id
     Type: AWS::EC2::VPC::Id
