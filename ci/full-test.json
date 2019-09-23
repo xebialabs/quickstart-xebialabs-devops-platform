@@ -13,11 +13,11 @@
     },
     {
         "ParameterKey": "XLDeployDockerImage",
-        "ParameterValue": "xebialabsunsupported/xl-deploy"
+        "ParameterValue": "xebialabs/xl-deploy"
     },
     {
         "ParameterKey": "XLReleaseDockerImage",
-        "ParameterValue": "xebialabsunsupported/xl-release"
+        "ParameterValue": "xebialabs/xl-release"
     },
     {
         "ParameterKey": "XLDeployClusterMode",
@@ -29,11 +29,11 @@
     },
     {
         "ParameterKey": "XLDeployVersion",
-        "ParameterValue": "8.2.0-2"
+        "ParameterValue": "9.0.3"
     },
     {
         "ParameterKey": "XLReleaseVersion",
-        "ParameterValue": "8.2.0-2"
+        "ParameterValue": "9.0.2"
     },
     {
         "ParameterKey": "DBMasterPassword",
@@ -54,5 +54,21 @@
     {
         "ParameterKey": "EnvironmentName",
         "ParameterValue": "xldevops-test"
+    },
+    {
+      "ParameterKey": "InstallBastionHost",
+      "ParameterValue": "false"
+    },
+    {
+      "ParameterKey": "LoadBalancerType",
+      "ParameterValue": "internet-facing"
+    },
+    {
+      "ParameterKey": "XLDeployLicense",
+      "ParameterValue": "base64licence"
+    },
+    {
+      "ParameterKey": "XLReleaseLicense",
+      "ParameterValue": "base64licence"
     }
 ]
