@@ -10,8 +10,14 @@ Parameters:
     Type: AWS::EC2::VPC::Id
     Description: The VPC ID the Security Groups should be deployed to
   BastionSecurityGroup:
-    Type: AWS::EC2::SecurityGroup::Id
+    Type: String
+    Default: ''
     Description: The Bastion Host security group for SSH into the ECS machines 
+
+Conditions:
+  BastionSecurityGroup: !Not
+    - !Equals [!Ref 'BastionSecurityGroup', '']
+
 Resources:
 
   ECSHostSecurityGroup:
@@ -23,10 +29,13 @@ Resources:
       # Only allow inbound access to ECS from the ELB
       - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup 
         IpProtocol: '-1'
-      - SourceSecurityGroupId: !Ref BastionSecurityGroup
-        IpProtocol: 'tcp'
-        FromPort: 22
-        ToPort: 22
+      - !If
+        - BastionSecurityGroup
+        - SourceSecurityGroupId: !Ref BastionSecurityGroup
+          IpProtocol: 'tcp'
+          FromPort: 22
+          ToPort: 22
+        - !Ref 'AWS::NoValue'
       Tags: 
       - Key: Name
         Value: !Sub ${EnvironmentName}-ECS-Hosts
