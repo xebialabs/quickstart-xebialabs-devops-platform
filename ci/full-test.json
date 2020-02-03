@@ -41,11 +41,11 @@
     },
     {
         "ParameterKey": "KeyPairName",
-        "ParameterValue": "jvanerp"
+        "ParameterValue": "cikey"
     },
     {
         "ParameterKey": "QSS3BucketName",
-        "ParameterValue": "override"
+        "ParameterValue": "$[taskcat_autobucket]"
     },
     {
         "ParameterKey": "RemoteAccessCIDR",
