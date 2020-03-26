@@ -310,12 +310,12 @@ Parameters:
     AllowedPattern: '[0-9A-Za-z=+/]*'
     Default: trial
   LoadBalancerType:
-    Default: 'internet-facing'
+    Default: internet-facing
     Description: 'The type of load balancer to deploy (either internal or public)'
     Type: String
     AllowedValues:
-      - 'internal'
-      - 'internet-facing'
+      - internal
+      - internet-facing
 # Mappings:
 
 Conditions: 
