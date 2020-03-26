@@ -37,4 +37,3 @@ tests:
       XLDeployLicense: BASE64
       XLReleaseLicense: BASE64
     template: templates/xl-devops-platform-master.template
-  
