@@ -1,25 +1,41 @@
-global:
-  marketplace-ami: false
-  owner: aws-quickstart@xebialabs.com
-  qsname: quickstart-xebialabs-devops-platform
+project:
+  name: quickstart-xebialabs-devops-platform
   regions:
     # - ap-northeast-1
     # - ap-northeast-2
-    # - ap-south-1
+    - ap-south-1
     # - ap-southeast-1
     # - ap-southeast-2
     # - ca-central-1
     # - eu-central-1
-    #- eu-west-1
+    # - eu-west-1
     # - sa-east-1
-    - us-east-1
+    #- us-east-1
     # - us-east-2
     # - us-west-1
     # - us-west-2
-  reporting: true
-
 tests:
-  quickstart-xebialabs-devops-platformt1:
-    parameter_input: full-test.json
-    template_file: xl-devops-platform-master.template
+  quickstart-xebialabs-devops-platform1:
+    parameters:
+      AvailabilityZones: $[taskcat_genaz_2]
+      XLDeployPassword: test12345678
+      XLReleasePassword: test12345678
+      XLDeployDockerImage: xebialabs/xl-deploy
+      XLReleaseDockerImage: xebialabs/xl-release
+      XLDeployClusterMode: hot-standby
+      XLReleaseClusterMode: full
+      XLDeployVersion: 9.5.2
+      XLReleaseVersion: 9.5.3
+      DBMasterPassword: test12345678
+      KeyPairName: agld-key-pair
+      QSS3BucketName: $[taskcat_autobucket]
+      QSS3KeyPrefix: quickstart-xebialabs-devops-platform/
+      RemoteAccessCIDR: 0.0.0.0/0
+      EnvironmentName: xldevops-test
+      InstallBastionHost: "true"
+      AcceptEula: "yes"
+      LoadBalancerType: internet-facing
+      XLDeployLicense: BASE64
+      XLReleaseLicense: BASE64
+    template: templates/xl-devops-platform-master.template
   
