@@ -27,6 +27,7 @@ Metadata:
         default: HTTP Configuration
       Parameters:
       - SslCertificateArn
+      - LoadBalancerType
     - Label:
         default: General Settings
       Parameters:
@@ -128,6 +129,8 @@ Metadata:
         default: EFS mount point
       UseExternalDB:
         default: User external database?
+      LoadBalancerType:  
+        default: The type of load balancer to deploy (either internal or public)  
 Parameters: 
   XLPlatformInstanceType:
     AllowedValues:
