@@ -193,12 +193,12 @@ Parameters:
     Type: String
     Default: ':default'
   LoadBalancerType:
-    Default: 'internet-facing'
+    Default: internet-facing
     Description: 'The type of load balancer to deploy (either internal or public)'
     Type: String
     AllowedValues:
-      - 'internal'
-      - 'internet-facing'
+      - internal
+      - internet-facing
   EnvironmentName:
     AllowedPattern: '^[0-9a-zA-Z]+(-*[0-9a-zA-Z]+)*$'
     Description: 'The Environment name, defaults to ''xldevops''.'
