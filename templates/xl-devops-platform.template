@@ -51,6 +51,7 @@ Metadata:
       - XLDeployClusterMode
       - XLDeployLicense
       - MountPoint
+      - AcceptEula
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
@@ -83,6 +84,8 @@ Metadata:
         default: XL Deploy license
       XLReleaseLicense:
         default: XL Release license
+      AcceptEula:
+        default: Accept the XebiaLabs EULA  
       SslCertificateArn:
         default: SSL certificate arn
       EnvironmentName:
@@ -173,6 +176,10 @@ Parameters:
     AllowedValues: 
     - "true"
     - "false"
+  AcceptEula:
+    Description: Do you accept the XebiaLabs EULA (Allowed value 'yes')
+    Type: String
+    AllowedPattern: '^yes$'  
   SslCertificateArn:
     Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
     Type: String
@@ -421,6 +428,7 @@ Resources:
         ClusterMode: !Ref XLReleaseClusterMode
         UseExternalDB: !Ref UseExternalDB
         License: !Ref XLReleaseLicense
+        AcceptEula: !Ref AcceptEula
   XLDeployApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
@@ -447,6 +455,7 @@ Resources:
         ClusterMode: !Ref XLDeployClusterMode
         UseExternalDB: !Ref UseExternalDB
         License: !Ref XLDeployLicense
+        AcceptEula: !Ref AcceptEula
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable
