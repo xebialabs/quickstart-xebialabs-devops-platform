@@ -168,17 +168,17 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: "true"
+    Default: 'true'
     AllowedValues: 
-    - "true"
-    - "false"
+    - 'true'
+    - 'false'
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: "true"
+    Default: 'true'
     AllowedValues: 
-    - "true"
-    - "false"
+    - 'true'
+    - 'false'
   AcceptEula:
     Description: Do you accept the XebiaLabs EULA (Allowed value 'yes')
     Type: String
@@ -283,9 +283,9 @@ Parameters:
   UseExternalDB:
     Description: Use an external Database
     AllowedValues:
-    - "true"
-    - "false"
-    Default: "true"
+    - 'true'
+    - 'false'
+    Default: 'true'
     Type: String
   XLDeployClusterMode:
     Description: Set the clustermode for XL Deploy
