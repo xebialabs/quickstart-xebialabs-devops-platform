@@ -156,10 +156,10 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: "true"
+    Default: 'true'
     AllowedValues:
-      - "true"
-      - "false"
+      - 'true'
+      - 'false'
   XLReleaseVersion:
     Description: The version of XL Release to deploy
     AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
@@ -171,17 +171,17 @@ Parameters:
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: "true"
+    Default: 'true'
     AllowedValues:
-      - "true"
-      - "false"
+      - 'true'
+      - 'false'
   InstallBastionHost:
     Description: Whether or not to install and configure a bastion host
     Type: String
-    Default: "false"
+    Default: 'false'
     AllowedValues:
-      - "true"
-      - "false"
+      - 'true'
+      - 'false'
   AcceptEula:
     Description: Do you accept the XebiaLabs EULA (Allowed value 'yes')
     Type: String
