@@ -153,10 +153,10 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues:
-      - true
-      - false
+      - 'true'
+      - 'false'
   XLReleaseVersion:
     Description: The version of XL Release to deploy
     AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
@@ -168,17 +168,17 @@ Parameters:
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues:
-      - true
-      - false
+      - 'true'
+      - 'false'
   InstallBastionHost:
     Description: Whether or not to install and configure a bastion host
     Type: String
-    Default: false
+    Default: 'false'
     AllowedValues:
-      - true
-      - false
+      - 'true'
+      - 'false'
   SslCertificateArn:
     Description: >-
       The ARN of the SSL certificate used to secure internet access to the
@@ -186,12 +186,12 @@ Parameters:
     Type: String
     Default: ':default'
   LoadBalancerType:
-    Default: 'internet-facing'
+    Default: internet-facing
     Description: 'The type of load balancer to deploy (either internal or public)'
     Type: String
     AllowedValues:
-      - 'internal'
-      - 'internet-facing'
+      - internal
+      - internet-facing
   EnvironmentName:
     AllowedPattern: '^[0-9a-zA-Z]+(-*[0-9a-zA-Z]+)*$'
     Description: 'The Environment name, defaults to ''xldevops''.'

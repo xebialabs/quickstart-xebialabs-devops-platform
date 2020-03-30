@@ -27,6 +27,7 @@ Metadata:
         default: HTTP Configuration
       Parameters:
       - SslCertificateArn
+      - LoadBalancerType
     - Label:
         default: General Settings
       Parameters:
@@ -125,6 +126,8 @@ Metadata:
         default: EFS mount point
       UseExternalDB:
         default: User external database?
+      LoadBalancerType:  
+        default: The type of load balancer to deploy (either internal or public)  
 Parameters: 
   XLPlatformInstanceType:
     AllowedValues:
@@ -162,17 +165,17 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues: 
-    - true
-    - false
+    - 'true'
+    - 'false'
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues: 
-    - true
-    - false
+    - 'true'
+    - 'false'
   SslCertificateArn:
     Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
     Type: String
@@ -273,9 +276,9 @@ Parameters:
   UseExternalDB:
     Description: Use an external Database
     AllowedValues:
-    - true
-    - false
-    Default: true
+    - 'true'
+    - 'false'
+    Default: 'true'
     Type: String
   XLDeployClusterMode:
     Description: Set the clustermode for XL Deploy
@@ -303,12 +306,12 @@ Parameters:
     AllowedPattern: '[0-9A-Za-z=+/]*'
     Default: trial
   LoadBalancerType:
-    Default: 'internet-facing'
+    Default: internet-facing
     Description: 'The type of load balancer to deploy (either internal or public)'
     Type: String
     AllowedValues:
-      - 'internal'
-      - 'internet-facing'
+      - internal
+      - internet-facing
 # Mappings:
 
 Conditions: 

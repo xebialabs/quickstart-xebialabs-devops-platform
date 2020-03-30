@@ -20,12 +20,12 @@ Parameters:
     Type: AWS::EC2::SecurityGroup::Id
 
   LoadBalancerType:
-    Default: 'internet-facing'
+    Default: internet-facing
     Description: 'The type of load balancer to deploy (either internal or public)'
     Type: String
     AllowedValues:
-      - 'internal'
-      - 'internet-facing'
+      - internal
+      - internet-facing
 
 Resources:
   LoadBalancer:
