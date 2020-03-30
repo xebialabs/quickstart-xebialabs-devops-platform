@@ -32,8 +32,8 @@ tests:
       QSS3KeyPrefix: quickstart-xebialabs-devops-platform/
       RemoteAccessCIDR: 0.0.0.0/0
       EnvironmentName: xldevops-test
-      AcceptEula: "yes"
       LoadBalancerType: internet-facing
+      InstallBastionHost: "false"
       XLDeployLicense: BASE64
       XLReleaseLicense: BASE64
     template: templates/xl-devops-platform-master.template
