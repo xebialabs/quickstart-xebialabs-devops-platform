@@ -23,6 +23,7 @@ Metadata:
         - DBMasterPassword
         - DBBackupRetentionPeriod
         - DBInstanceClass
+        - DBNames
     - Label:
         default: HTTP Configuration
       Parameters:
@@ -108,6 +109,8 @@ Metadata:
         default: Database backup retention period
       DBInstanceClass:
         default: Database instance class
+      DBNames:
+        default: Database names
       KeyPairName:
         default: Key name
       BastionSecurityGroup:
@@ -262,6 +265,9 @@ Parameters:
     Default: db.r4.large
     Description: The name of the compute and memory capacity class of the DB instance.
     Type: String
+  DBNames:
+    Description: The names of the database which will create.
+    Type: CommaDelimitedList 
   VPCCIDR:
     Description: Enter the CIDR Range for your VPC
     Type: String
@@ -419,7 +425,9 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
+        DBName: !Select [ 0, !Ref DBNames ]
         CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
+        DBName: !Select [ 1, !Ref DBNames ]
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLReleaseClusterMode
         UseExternalDB: !Ref UseExternalDB
@@ -445,6 +453,7 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
+        DBName: !Select [ 2, !Ref DBNames ]
         CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLDeployClusterMode
