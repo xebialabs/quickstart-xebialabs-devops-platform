@@ -387,17 +387,18 @@ Resources:
         DBInstanceClass: !Ref DBInstanceClass
         AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
         DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
-  CreateDBLambda:
+  RDSCreateDBLambda:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        AuroraSubnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
-        AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        PrivateSubnetIDs: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
+        DBUser: !Ref DBMasterUsername
+        DBPassword: !Ref DBMasterPassword
+        DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
+        AuroraRDSSecurityGroupID: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
   XLReleaseApplication:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
@@ -419,7 +420,6 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
-        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLReleaseClusterMode
         UseExternalDB: !Ref UseExternalDB
@@ -445,7 +445,6 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
-        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLDeployClusterMode
         UseExternalDB: !Ref UseExternalDB
