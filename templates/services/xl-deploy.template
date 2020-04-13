@@ -61,9 +61,6 @@ Parameters:
     Description: The Postgres DB Password
     Type: String
     NoEcho: True
-  CreateDBLambdaFunction:
-    Description: The Arn of the Create Database lambda function
-    Type: String
   MountPoint:
     Description: The Linux mount point for the EFS volume
     Type: String
@@ -103,18 +100,9 @@ Conditions:
   LicenseProvided: !Not [ !Equals [ !Ref License, 'trial' ] ]
   SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
 Resources:
-  CreateXLDeployDatabase:
-    Type: Custom::CreateXLDeployDatabase
-    Condition: ShouldUseExternalDB
-    Properties:
-      ServiceToken: !Ref CreateDBLambdaFunction
-      DBName: xldeploy
-      DBHost: !Ref DBHost
-      DBUser: !Ref DBUser
-      DBPassword: !Ref DBPassword
   XLDeployECSService:
     Type: AWS::ECS::Service
-    DependsOn: [ XLDeployALBListener, CreateXLDeployDatabase ]
+    DependsOn: [ XLDeployALBListener ]
     Condition: ShouldLaunchECSCluster
     Properties:
       Cluster: !Ref ECSCluster
