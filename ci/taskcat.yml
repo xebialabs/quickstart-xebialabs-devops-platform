@@ -24,8 +24,8 @@ tests:
       XLReleaseDockerImage: xebialabs/xl-release
       XLDeployClusterMode: hot-standby
       XLReleaseClusterMode: full
-      XLDeployVersion: 9.5.2
-      XLReleaseVersion: 9.5.3
+      XLDeployVersion: 9.6.0
+      XLReleaseVersion: 9.6.1
       DBMasterPassword: test12345678
       KeyPairName: agld-key-pair
       QSS3BucketName: $[taskcat_autobucket]
@@ -34,6 +34,7 @@ tests:
       EnvironmentName: xldevops-test
       LoadBalancerType: internet-facing
       InstallBastionHost: 'false'
+      AcceptEula: 'yes'
       XLDeployLicense: BASE64
       XLReleaseLicense: BASE64
     template: templates/xl-devops-platform-master.template
