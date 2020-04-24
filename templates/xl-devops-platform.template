@@ -407,6 +407,7 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         AuroraRDSSecurityGroupID: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
   XLReleaseApplication:
+    DependsOn: RDSCreateDBLambda
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
     Properties:
@@ -433,6 +434,7 @@ Resources:
         License: !Ref XLReleaseLicense
         AcceptEula: !Ref AcceptEula
   XLDeployApplication:
+    DependsOn: RDSCreateDBLambda
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
     Properties:
