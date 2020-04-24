@@ -52,6 +52,7 @@ Metadata:
           - XLReleasePassword
           - XLReleaseClusterMode
           - XLReleaseLicense
+          - AcceptEula
       - Label:
           default: AWS Quick Start Configuration
         Parameters:
@@ -86,6 +87,8 @@ Metadata:
         default: XL Deploy license
       XLReleaseLicense:
         default: XL Release license
+      AcceptEula:
+        default: Accept the XebiaLabs EULA  
       SslCertificateArn:
         default: SSL certificate arn
       LoadBalancerType: 
@@ -179,6 +182,10 @@ Parameters:
     AllowedValues:
       - 'true'
       - 'false'
+  AcceptEula:
+    Description: To deploy the stack, AcceptEula value must be set to 'yes'
+    Type: String
+    AllowedPattern: '^yes$'    
   SslCertificateArn:
     Description: >-
       The ARN of the SSL certificate used to secure internet access to the
@@ -439,6 +446,7 @@ Resources:
         XLDeployLicense: !Ref XLDeployLicense
         SslCertificateArn: !Ref SslCertificateArn
         LoadBalancerType: !Ref LoadBalancerType
+        AcceptEula: !Ref AcceptEula
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable
