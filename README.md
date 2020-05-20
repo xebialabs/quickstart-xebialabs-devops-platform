@@ -1,9 +1,6 @@
 # quickstart-xebialabs-devops-platform
 ## XebiaLabs DevOps Platform on AWS
 
-#### Git clone command:
-git clone --recurse-submodules git@github.com:xebialabs/quickstart-xebialabs-devops-platform.git
-
 ### License
 This Quick Start is distributed under the Apache License, Version 2.0. This Quick Start uses "psycopg2" library, which is provided under the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
