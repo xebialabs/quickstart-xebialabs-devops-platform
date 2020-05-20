@@ -33,8 +33,8 @@ tests:
       RemoteAccessCIDR: 0.0.0.0/0
       EnvironmentName: xldevops-test
       LoadBalancerType: internet-facing
-      InstallBastionHost: 'false'
+      InstallBastionHost: 'true'
       AcceptEula: 'yes'
-      XLDeployLicense: BASE64
-      XLReleaseLicense: BASE64
+      XLDeployLicense: trial
+      XLReleaseLicense: trial
     template: templates/xl-devops-platform-master.template
