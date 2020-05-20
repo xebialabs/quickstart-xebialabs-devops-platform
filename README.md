@@ -1,9 +1,6 @@
 # quickstart-xebialabs-devops-platform
 ## XebiaLabs DevOps Platform on AWS
 
-#### Git clone command:
-git clone --recurse-submodules git@github.com:xebialabs/quickstart-xebialabs-devops-platform.git
-
 ### License
 This Quick Start is distributed under the Apache License, Version 2.0. This Quick Start uses "psycopg2" library, which is provided under the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
@@ -18,6 +15,11 @@ This Quick Start is for development teams, infrastructure architects, and DevOps
 ![Quick Start architecture for the XebiaLabs DevOps Platform on AWS](https://d1.awsstatic.com/partner-network/QuickStart/datasheets/xebialabs-devops-platform-on-aws-architecture.078426cef063c8ce9d05ef3702ed565d94c822aa.png)
 
 For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide]( https://fwd.aws/YWarg).
+
+#### Contributing :
+In quickstart-xebialabs-devops-platform, we are using VPC and Bastion Host submodules from different repositories. git clone those submodules locally using following command:
+
+git clone --recurse-submodules git@github.com:xebialabs/quickstart-xebialabs-devops-platform.git
 
 To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
 
