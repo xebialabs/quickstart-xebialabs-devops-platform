@@ -29,11 +29,13 @@ Metadata:
           default: HTTP Configuration
         Parameters:
           - SslCertificateArn
+          - LoadBalancerType
       - Label:
           default: General Settings
         Parameters:
           - EnvironmentName
           - KeyPairName
+          - InstallBastionHost
       - Label:
           default: XebiaLabs DevOps Platform Configuration
         Parameters:
@@ -75,6 +77,8 @@ Metadata:
         default: Install XL Release
       InstallXLDeploy:
         default: Install XL Deploy
+      InstallBastionHost: 
+        default: Install bastion host
       XLDeployClusterMode:
         default: XL Deploy cluster mode
       XLReleaseClusterMode:
@@ -84,9 +88,11 @@ Metadata:
       XLReleaseLicense:
         default: XL Release license
       AcceptEula:
-        default: Accept the XebiaLabs EULA
+        default: Accept the XebiaLabs EULA  
       SslCertificateArn:
         default: SSL certificate arn
+      LoadBalancerType: 
+        default: The type of load balancer to deploy (either internal or public)
       EnvironmentName:
         default: Environment name
       VPCCIDR:
@@ -150,10 +156,10 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues:
-      - true
-      - false
+      - 'true'
+      - 'false'
   XLReleaseVersion:
     Description: The version of XL Release to deploy
     AllowedPattern: '^[0-9]+\.[0-9+]($|\.[0-9]+$|\.[0-9]+[-+.].+$)'
@@ -165,20 +171,34 @@ Parameters:
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues:
-      - true
-      - false
-  AcceptEula:
-    Description: Do you accept the XebiaLabs EULA (Allowed value 'yes')
+      - 'true'
+      - 'false'
+  InstallBastionHost:
+    Description: Whether or not to install and configure a bastion host
     Type: String
-    AllowedPattern: '^yes$'
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  AcceptEula:
+    Description: To deploy the stack, AcceptEula value must be set to 'yes'
+    Type: String
+    AllowedPattern: '^yes$'    
   SslCertificateArn:
     Description: >-
       The ARN of the SSL certificate used to secure internet access to the
       XebiaLabs DevOps Platform
     Type: String
     Default: ':default'
+  LoadBalancerType:
+    Default: internet-facing
+    Description: 'The type of load balancer to deploy (either internal or public)'
+    Type: String
+    AllowedValues:
+      - internal
+      - internet-facing
   EnvironmentName:
     AllowedPattern: '^[0-9a-zA-Z]+(-*[0-9a-zA-Z]+)*$'
     Description: 'The Environment name, defaults to ''xldevops''.'
@@ -330,6 +350,9 @@ Conditions:
   GovCloudCondition: !Equals 
     - !Ref 'AWS::Region'
     - us-gov-west-1
+  InstallBastionHost: !Equals 
+    - !Ref InstallBastionHost
+    - true
 Resources:
   VPCStack:
     Type: 'AWS::CloudFormation::Stack'
@@ -357,6 +380,7 @@ Resources:
         VPCCIDR: !Ref VPCCIDR
   LinuxBastionStack:
     Type: 'AWS::CloudFormation::Stack'
+    Condition: InstallBastionHost
     Properties:
       TemplateURL: !Sub 
         - >-
@@ -414,13 +438,14 @@ Resources:
         DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        BastionSecurityGroup: !GetAtt LinuxBastionStack.Outputs.BastionSecurityGroupID
+        BastionSecurityGroup: !If [InstallBastionHost, !GetAtt LinuxBastionStack.Outputs.BastionSecurityGroupID, '']
         VPCCIDR: !Ref VPCCIDR
         XLReleaseClusterMode: !Ref XLReleaseClusterMode
         XLDeployClusterMode: !Ref XLDeployClusterMode
         XLReleaseLicense: !Ref XLReleaseLicense
         XLDeployLicense: !Ref XLDeployLicense
         SslCertificateArn: !Ref SslCertificateArn
+        LoadBalancerType: !Ref LoadBalancerType
         AcceptEula: !Ref AcceptEula
 Outputs:
   XLDeployURL:

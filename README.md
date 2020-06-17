@@ -16,6 +16,11 @@ This Quick Start is for development teams, infrastructure architects, and DevOps
 
 For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide]( https://fwd.aws/YWarg).
 
+#### Contributing :
+In quickstart-xebialabs-devops-platform, we are using VPC and Bastion Host submodules from different repositories. git clone those submodules locally using following command:
+
+git clone --recurse-submodules git@github.com:xebialabs/quickstart-xebialabs-devops-platform.git
+
 To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
 
 If you'd like to submit code for this Quick Start, please review the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).

@@ -27,6 +27,7 @@ Metadata:
         default: HTTP Configuration
       Parameters:
       - SslCertificateArn
+      - LoadBalancerType
     - Label:
         default: General Settings
       Parameters:
@@ -85,7 +86,7 @@ Metadata:
       XLReleaseLicense:
         default: XL Release license
       AcceptEula:
-        default: Accept the XebiaLabs EULA
+        default: Accept the XebiaLabs EULA  
       SslCertificateArn:
         default: SSL certificate arn
       EnvironmentName:
@@ -128,6 +129,8 @@ Metadata:
         default: EFS mount point
       UseExternalDB:
         default: User external database?
+      LoadBalancerType:  
+        default: The type of load balancer to deploy (either internal or public)  
 Parameters: 
   XLPlatformInstanceType:
     AllowedValues:
@@ -165,21 +168,21 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues: 
-    - true
-    - false
+    - 'true'
+    - 'false'
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues: 
-    - true
-    - false
+    - 'true'
+    - 'false'
   AcceptEula:
-    Description: Do you accept the XebiaLabs EULA (Allowed value 'yes')
+    Description: To deploy the stack, AcceptEula value must be set to 'yes'
     Type: String
-    AllowedPattern: '^yes$'
+    AllowedPattern: '^yes$'  
   SslCertificateArn:
     Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
     Type: String
@@ -194,7 +197,8 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   BastionSecurityGroup:
     Description: The Bastion Security Group that allows SSH access to the ECS machines
-    Type: AWS::EC2::SecurityGroup::Id
+    Type: String
+    Default: ''
   VPCID:
     Description: The VPC Id
     Type: AWS::EC2::VPC::Id
@@ -279,9 +283,9 @@ Parameters:
   UseExternalDB:
     Description: Use an external Database
     AllowedValues:
-    - true
-    - false
-    Default: true
+    - 'true'
+    - 'false'
+    Default: 'true'
     Type: String
   XLDeployClusterMode:
     Description: Set the clustermode for XL Deploy
@@ -308,6 +312,13 @@ Parameters:
     Type: String
     AllowedPattern: '[0-9A-Za-z=+/]*'
     Default: trial
+  LoadBalancerType:
+    Default: internet-facing
+    Description: 'The type of load balancer to deploy (either internal or public)'
+    Type: String
+    AllowedValues:
+      - internal
+      - internet-facing
 # Mappings:
 
 Conditions: 
@@ -367,6 +378,7 @@ Resources:
         VPCID: !Ref VPCID
         Subnets: !Join [ ',', [ !Ref PublicSubnet1ID, !Ref PublicSubnet2ID ]]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
+        LoadBalancerType: !Ref LoadBalancerType
 
   RDSStack:
     Type: AWS::CloudFormation::Stack
@@ -382,18 +394,20 @@ Resources:
         DBInstanceClass: !Ref DBInstanceClass
         AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
         DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
-  CreateDBLambda:
+  RDSCreateDBLambda:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
       - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
       - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
       Parameters:
-        AuroraSubnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
-        AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        PrivateSubnetIDs: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
+        DBUser: !Ref DBMasterUsername
+        DBPassword: !Ref DBMasterPassword
+        DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
+        AuroraRDSSecurityGroupID: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
   XLReleaseApplication:
+    DependsOn: RDSCreateDBLambda
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
     Properties:
@@ -414,13 +428,13 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
-        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLReleaseClusterMode
         UseExternalDB: !Ref UseExternalDB
         License: !Ref XLReleaseLicense
         AcceptEula: !Ref AcceptEula
   XLDeployApplication:
+    DependsOn: RDSCreateDBLambda
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
     Properties:
@@ -441,7 +455,6 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
-        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLDeployClusterMode
         UseExternalDB: !Ref UseExternalDB

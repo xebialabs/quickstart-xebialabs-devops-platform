@@ -61,9 +61,6 @@ Parameters:
     Description: The Postgres DB Password
     Type: String
     NoEcho: True
-  CreateDBLambdaFunction:
-    Description: The Arn of the Create Database lambda function
-    Type: String
   MountPoint:
     Description: The Linux mount point for the EFS volume
     Type: String
@@ -72,9 +69,9 @@ Parameters:
   UseExternalDB:
     Description: Use an external Database
     AllowedValues:
-    - true
-    - false
-    Default: true
+    - 'true'
+    - 'false'
+    Default: 'true'
     Type: String
   ClusterMode:
     Description: Set the clustermode for XL Deploy
@@ -93,10 +90,9 @@ Parameters:
     Type: String
     Default: ':default'
   AcceptEula:
-    Description: Do you accept the XebiaLabs EULA (Allowed value 'yes')
+    Description: To deploy the stack, AcceptEula value must be set to 'yes'
     Type: String
-    AllowedPattern: '^yes$'
-
+    AllowedPattern: '^yes$'  
 # Mappings:
 
 Conditions:
@@ -107,20 +103,10 @@ Conditions:
   ShouldLaunchCluster: !Not [ !Equals [ !Ref ClusterMode, 'default' ] ]
   LicenseProvided: !Not [ !Equals [ !Ref License, 'trial' ] ]
   SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
-  EulaAccepted: !Equals [ !Ref AcceptEula, 'yes' ]
 Resources:
-  CreateXLDeployDatabase:
-    Type: Custom::CreateXLDeployDatabase
-    Condition: ShouldUseExternalDB
-    Properties:
-      ServiceToken: !Ref CreateDBLambdaFunction
-      DBName: xldeploy
-      DBHost: !Ref DBHost
-      DBUser: !Ref DBUser
-      DBPassword: !Ref DBPassword
   XLDeployECSService:
     Type: AWS::ECS::Service
-    DependsOn: [ XLDeployALBListener, CreateXLDeployDatabase ]
+    DependsOn: [ XLDeployALBListener ]
     Condition: ShouldLaunchECSCluster
     Properties:
       Cluster: !Ref ECSCluster
@@ -179,9 +165,9 @@ Resources:
           - !Ref AWS::NoValue
         - Name: ACCEPT_EULA
           Value: !If
-          - EulaAccepted
-          - 'Y'
-          - 'N'
+          - LicenseProvided
+          - !Ref AWS::NoValue
+          - 'Y'  
         Hostname: xl-deploy
         MountPoints:
         - ContainerPath: "/opt/xebialabs/xl-deploy-server/repository"
