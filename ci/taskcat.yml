@@ -29,6 +29,7 @@ tests:
       DBMasterPassword: test12345678
       KeyPairName: agld-key-pair
       QSS3BucketName: $[taskcat_autobucket]
+      QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-xebialabs-devops-platform/
       RemoteAccessCIDR: 0.0.0.0/0
       EnvironmentName: xldevops-test
