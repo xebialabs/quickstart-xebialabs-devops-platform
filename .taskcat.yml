@@ -3,14 +3,14 @@ project:
   regions:
     # - ap-northeast-1
     # - ap-northeast-2
-    - ap-south-1
+    # - ap-south-1
     # - ap-southeast-1
     # - ap-southeast-2
     # - ca-central-1
     # - eu-central-1
     # - eu-west-1
     # - sa-east-1
-    #- us-east-1
+    - us-east-1
     # - us-east-2
     # - us-west-1
     # - us-west-2
@@ -24,10 +24,10 @@ tests:
       XLReleaseDockerImage: xebialabs/xl-release
       XLDeployClusterMode: hot-standby
       XLReleaseClusterMode: full
-      XLDeployVersion: 9.6.0
-      XLReleaseVersion: 9.6.1
+      XLDeployVersion: 9.6.1
+      XLReleaseVersion: 9.6.2
       DBMasterPassword: test12345678
-      KeyPairName: agld-key-pair
+      KeyPairName: agld-keypair
       QSS3BucketName: $[taskcat_autobucket]
       QSS3BucketRegion: $[taskcat_current_region]
       QSS3KeyPrefix: quickstart-xebialabs-devops-platform/
