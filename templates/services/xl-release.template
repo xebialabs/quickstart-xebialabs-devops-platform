@@ -61,9 +61,6 @@ Parameters:
     Description: The Postgres DB Password
     Type: String
     NoEcho: True
-  CreateDBLambdaFunction:
-    Description: The Arn of the Create Database lambda function
-    Type: String
   MountPoint:
     Description: The Linux mount point for the EFS volume
     Type: String
@@ -71,9 +68,9 @@ Parameters:
   UseExternalDB:
     Description: Use an external Database
     AllowedValues:
-    - true
-    - false
-    Default: true
+    - 'true'
+    - 'false'
+    Default: 'true'
     Type: String
   ClusterMode:
     Description: Set the clustermode for XL Release
@@ -92,6 +89,10 @@ Parameters:
     Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
     Type: String
     Default: ':default'
+  AcceptEula:
+    Description: To deploy the stack, AcceptEula value must be set to 'yes'
+    Type: String
+    AllowedPattern: '^yes$'  
 
 # Mappings: 
 
@@ -104,27 +105,9 @@ Conditions:
   LicenseProvided: !Not [ !Equals [ !Ref License, 'trial' ] ]
   SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
 Resources:
-  CreateXLReleaseDatabase:
-    Type: Custom::CreateXLReleaseDatabase
-    Condition: ShouldUseExternalDB
-    Properties:
-      ServiceToken: !Ref CreateDBLambdaFunction
-      DBName: xlrelease
-      DBHost: !Ref DBHost
-      DBUser: !Ref DBUser
-      DBPassword: !Ref DBPassword
-  CreateXLReleaseArchiveDatabase:
-    Type: Custom::CreateXLReleaseArchiveDatabase
-    Condition: ShouldUseExternalDB
-    Properties:
-      ServiceToken: !Ref CreateDBLambdaFunction
-      DBName: xlrarchive
-      DBHost: !Ref DBHost
-      DBUser: !Ref DBUser
-      DBPassword: !Ref DBPassword
   XLReleaseECSService:
     Type: AWS::ECS::Service
-    DependsOn: [ XLReleaseALBListener, CreateXLReleaseArchiveDatabase, CreateXLReleaseDatabase ]
+    DependsOn: [ XLReleaseALBListener ]
     Condition: ShouldLaunchECSCluster
     Properties:
       Cluster: !Ref ECSCluster
@@ -196,6 +179,11 @@ Resources:
           - LicenseProvided
           - !Ref License
           - !Ref AWS::NoValue
+        - Name: ACCEPT_EULA
+          Value: !If
+          - LicenseProvided
+          - !Ref AWS::NoValue
+          - 'Y' 
         Hostname: xl-release
         MountPoints:
         - ContainerPath: "/opt/xebialabs/xl-release-server/repository"

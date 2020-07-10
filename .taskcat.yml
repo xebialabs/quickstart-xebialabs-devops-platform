@@ -1,0 +1,46 @@
+project:
+  name: quickstart-xebialabs-devops-platform
+  regions:
+    - ap-northeast-1
+    - ap-northeast-2
+    - ap-south-1
+    - ap-southeast-1
+    - ap-southeast-2
+    - ca-central-1
+    - eu-central-1
+    - eu-west-1
+    - sa-east-1
+    - us-east-1
+    - us-east-2
+    - us-west-1
+    - us-west-2
+  #s3_bucket: tcat-quickstart-xebialabs-devijbqhkxk
+tests:
+  quickstart-xebialabs-devops-platform1:
+    parameters:
+      AvailabilityZones: $[taskcat_genaz_2]
+      XLDeployPassword: test12345678
+      XLReleasePassword: test12345678
+      XLDeployDockerImage: xebialabs/xl-deploy
+      XLReleaseDockerImage: xebialabs/xl-release
+      XLDeployClusterMode: hot-standby
+      XLReleaseClusterMode: full
+      XLDeployVersion: 9.6.1
+      XLReleaseVersion: 9.6.2
+      DBMasterPassword: test12345678
+      KeyPairName: sshvans
+      QSS3BucketName: $[taskcat_autobucket]
+      QSS3BucketRegion: $[taskcat_current_region]
+      QSS3KeyPrefix: quickstart-xebialabs-devops-platform/
+      RemoteAccessCIDR: 10.0.0.0/0
+      EnvironmentName: xldevops-test
+      LoadBalancerType: internet-facing
+      InstallBastionHost: 'true'
+      AcceptEula: 'yes'
+      XLDeployLicense: trial
+      XLReleaseLicense: trial
+    template: templates/xl-devops-platform-master.template
+    regions:
+      # - eu-west-1
+      # - us-east-1
+      - us-west-2

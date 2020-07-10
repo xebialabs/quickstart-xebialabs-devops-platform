@@ -12,20 +12,28 @@ Parameters:
     Description: The VPC the Application Load Balancer should be deployed to
 
   Subnets:
-    Description: The private subnets the Application Load Balancer should be deployed to
+    Description: The public/private subnets the Application Load Balancer should be deployed to
     Type: List<AWS::EC2::Subnet::Id>
 
   SecurityGroup:
     Description: Select the Security Group to apply to the Application Load Balancer
     Type: AWS::EC2::SecurityGroup::Id
 
-Resources:
+  LoadBalancerType:
+    Default: internet-facing
+    Description: 'The type of load balancer to deploy (either internal or public)'
+    Type: String
+    AllowedValues:
+      - internal
+      - internet-facing
 
+Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: !Ref EnvironmentName
-      Scheme: internet-facing
+      Scheme: !Ref LoadBalancerType
+      IpAddressType: ipv4
       LoadBalancerAttributes:
       - Key: idle_timeout.timeout_seconds
         Value: '30'

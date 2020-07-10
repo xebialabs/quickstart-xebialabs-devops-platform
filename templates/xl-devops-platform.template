@@ -27,6 +27,7 @@ Metadata:
         default: HTTP Configuration
       Parameters:
       - SslCertificateArn
+      - LoadBalancerType
     - Label:
         default: General Settings
       Parameters:
@@ -51,10 +52,12 @@ Metadata:
       - XLDeployClusterMode
       - XLDeployLicense
       - MountPoint
+      - AcceptEula
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
       - QSS3BucketName
+      - QSS3BucketRegion
       - QSS3KeyPrefix  
     ParameterLabels:
       XLPlatformInstanceType:
@@ -83,6 +86,8 @@ Metadata:
         default: XL Deploy license
       XLReleaseLicense:
         default: XL Release license
+      AcceptEula:
+        default: Accept the XebiaLabs EULA  
       SslCertificateArn:
         default: SSL certificate arn
       EnvironmentName:
@@ -113,6 +118,8 @@ Metadata:
         default: Bastion security group
       QSS3BucketName:
         default: Quick Start S3 bucket name
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
       VPCID:
@@ -125,6 +132,8 @@ Metadata:
         default: EFS mount point
       UseExternalDB:
         default: User external database?
+      LoadBalancerType:  
+        default: The type of load balancer to deploy (either internal or public)  
 Parameters: 
   XLPlatformInstanceType:
     AllowedValues:
@@ -162,17 +171,21 @@ Parameters:
   InstallXLRelease:
     Description: Whether XL Release should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues: 
-    - true
-    - false
+    - 'true'
+    - 'false'
   InstallXLDeploy:
     Description: Whether XL Deploy should be installed in the ECS Cluster.
     Type: String
-    Default: true
+    Default: 'true'
     AllowedValues: 
-    - true
-    - false
+    - 'true'
+    - 'false'
+  AcceptEula:
+    Description: To deploy the stack, AcceptEula value must be set to 'yes'
+    Type: String
+    AllowedPattern: '^yes$'  
   SslCertificateArn:
     Description: The ARN of the SSL certificate used to secure internet access to the XebiaLabs DevOps Platform
     Type: String
@@ -187,7 +200,8 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   BastionSecurityGroup:
     Description: The Bastion Security Group that allows SSH access to the ECS machines
-    Type: AWS::EC2::SecurityGroup::Id
+    Type: String
+    Default: ''
   VPCID:
     Description: The VPC Id
     Type: AWS::EC2::VPC::Id
@@ -219,6 +233,10 @@ Parameters:
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Default: aws-quickstart
     Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
@@ -272,9 +290,9 @@ Parameters:
   UseExternalDB:
     Description: Use an external Database
     AllowedValues:
-    - true
-    - false
-    Default: true
+    - 'true'
+    - 'false'
+    Default: 'true'
     Type: String
   XLDeployClusterMode:
     Description: Set the clustermode for XL Deploy
@@ -301,22 +319,31 @@ Parameters:
     Type: String
     AllowedPattern: '[0-9A-Za-z=+/]*'
     Default: trial
+  LoadBalancerType:
+    Default: internet-facing
+    Description: 'The type of load balancer to deploy (either internal or public)'
+    Type: String
+    AllowedValues:
+      - internal
+      - internet-facing
 # Mappings:
 
 Conditions: 
-  GovCloudCondition: !Equals [ !Ref "AWS::Region", us-gov-west-1 ]
   ShouldInstallXLDeploy: !Equals [ !Ref InstallXLDeploy, True ]
   ShouldInstallXLRelease: !Equals [ !Ref InstallXLRelease, True ]
   ShouldInstallAll: !And [ Condition: ShouldInstallXLDeploy, Condition: ShouldInstallXLRelease ]
   ShouldUseExternalDB: !Equals [ !Ref UseExternalDB, true ]
   SslCertificateProvided: !Not [ !Equals [ !Ref SslCertificateArn, ':default' ] ]
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 Resources:
   SecurityGroupsStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/securitygroups.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub 
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/infrastructure/securitygroups.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
@@ -324,9 +351,11 @@ Resources:
   EFSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/efs.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/infrastructure/efs.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
@@ -335,9 +364,11 @@ Resources:
   ECSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/ecs.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub 
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/infrastructure/ecs.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         Subnets: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
@@ -352,22 +383,27 @@ Resources:
   LoadBalancerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/alb.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/infrastructure/alb.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         VPCID: !Ref VPCID
         Subnets: !Join [ ',', [ !Ref PublicSubnet1ID, !Ref PublicSubnet2ID ]]
         SecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
+        LoadBalancerType: !Ref LoadBalancerType
 
   RDSStack:
     Type: AWS::CloudFormation::Stack
     Condition: ShouldUseExternalDB
     Properties:
-      TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/rds.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/infrastructure/rds.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         Subnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
         DBMasterUsername: !Ref DBMasterUsername
@@ -375,24 +411,30 @@ Resources:
         DBInstanceClass: !Ref DBInstanceClass
         AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
         DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
-  CreateDBLambda:
+  RDSCreateDBLambda:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/infrastructure/lambda.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/infrastructure/lambda.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
-        AuroraSubnets: !Join [ ',', [ !Ref DataSubnet1ID, !Ref DataSubnet2ID ]]
-        AuroraRDSSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        PrivateSubnetIDs: !Join [ ',', [ !Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID ]]
+        DBUser: !Ref DBMasterUsername
+        DBPassword: !Ref DBMasterPassword
+        DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
+        AuroraRDSSecurityGroupID: !GetAtt SecurityGroupsStack.Outputs.RDSSecurityGroup
   XLReleaseApplication:
+    DependsOn: RDSCreateDBLambda
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLRelease
     Properties:
-      TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-release.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/services/xl-release.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         VPCID: !Ref VPCID
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
@@ -407,18 +449,21 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
-        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLReleaseClusterMode
         UseExternalDB: !Ref UseExternalDB
         License: !Ref XLReleaseLicense
+        AcceptEula: !Ref AcceptEula
   XLDeployApplication:
+    DependsOn: RDSCreateDBLambda
     Type: AWS::CloudFormation::Stack
     Condition: ShouldInstallXLDeploy
     Properties:
-      TemplateURL: !Sub
-      - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/services/xl-deploy.template
-      - { QSS3Region: !If [GovCloudCondition, s3-us-gov-west-1, s3] }
+      TemplateURL: 
+        !Sub
+          - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/services/xl-deploy.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         VPCID: !Ref VPCID
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
@@ -433,11 +478,11 @@ Resources:
         DBHost: !GetAtt RDSStack.Outputs.AuroraEndPointAddress
         DBUser: !Ref DBMasterUsername
         DBPassword: !Ref DBMasterPassword
-        CreateDBLambdaFunction: !GetAtt CreateDBLambda.Outputs.CreateDbLambdaArn
         MountPoint: !Ref MountPoint
         ClusterMode: !Ref XLDeployClusterMode
         UseExternalDB: !Ref UseExternalDB
         License: !Ref XLDeployLicense
+        AcceptEula: !Ref AcceptEula
 Outputs:
   XLDeployURL:
     Description: The URL where XL Deploy is reachable
