@@ -14,7 +14,7 @@ Digital.ai creates efficient, repeatable, scalable release and deployment proces
 This Quick Start is for development teams, infrastructure architects, and DevOps professionals who want to get started quickly with the Digital.ai DevOps Platform for release orchestration and deployment automation.
 ![Quick Start architecture for the Digital.ai DevOps Platform on AWS](https://d1.awsstatic.com/partner-network/QuickStart/datasheets/digitalai-devops-platform-on-aws-architecture.777fd68a72df2c6a36e9dba2c26801a14732cc82.png)
 
-For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide]( https://aws-quickstart.github.io/quickstart-xebialabs-devops-platform/).
+For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide]( https://aws-quickstart.github.io/quickstart-digital-ai-devops-platform/).
 
 To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
 
